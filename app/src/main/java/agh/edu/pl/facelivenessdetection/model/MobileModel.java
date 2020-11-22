@@ -12,7 +12,7 @@ public interface MobileModel {
 
     /*
      * This method lets you invoke from any thread a context change on UI that will indicate that
-     * face shown on picture is fake
+     * face shown on picture is real
      */
     public void setReal();
 
