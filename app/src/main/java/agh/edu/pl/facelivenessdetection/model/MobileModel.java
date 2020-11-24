@@ -17,4 +17,5 @@ public interface MobileModel {
     public void setReal();
 
     public Bitmap getPhoto();
+    public Bitmap getPhotoWithScreenFlash();
 }

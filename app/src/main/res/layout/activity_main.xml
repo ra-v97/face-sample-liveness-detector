@@ -5,7 +5,19 @@
     android:id="@+id/textureView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:visibility="visible"
     tools:context=".MainActivity">
+
+    <Button
+        android:id="@+id/button"
+        android:layout_width="148dp"
+        android:layout_height="44dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:onClick="buttClick"
+        android:text="DETECT"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/texture" />
 
     <TextView
         android:id="@+id/statusView"
@@ -22,24 +34,13 @@
 
     <TextureView
         android:id="@+id/texture"
-        android:layout_width="373dp"
-        android:layout_height="505dp"
+        android:layout_width="368dp"
+        android:layout_height="473dp"
         android:layout_marginStart="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.497" />
-
-    <Button
-        android:id="@+id/button"
-        android:layout_width="148dp"
-        android:layout_height="44dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="8dp"
-        android:onClick="buttClick"
-        android:text="DETECT"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/texture" />
 
     <TextView
         android:id="@+id/textView2"
@@ -77,5 +78,23 @@
             android:onClick="onToggleMethod2"
             android:text="Method 2" />
     </RadioGroup>
+
+    <ImageView
+        android:id="@+id/imageView2"
+        android:layout_width="410dp"
+        android:layout_height="735dp"
+        android:visibility="invisible"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@android:drawable/screen_background_dark" />
+
+    <ImageView
+        android:id="@+id/imageView3"
+        android:layout_width="415dp"
+        android:layout_height="728dp"
+        android:visibility="invisible"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@android:drawable/screen_background_light" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -24,7 +24,6 @@ import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CaptureRequest;
-import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
 import android.media.ImageReader;
@@ -37,6 +36,8 @@ import android.util.Size;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
+import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -50,7 +51,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -73,6 +76,7 @@ public class MainActivity extends AppCompatActivity implements MobileModel {
     private RadioButton radioButtonMethod1;
     private RadioButton radioButtonMethod2;
     private TextView statusTextView;
+    private Button button;
 
     private Size largest;
     private String mCameraId;
@@ -88,6 +92,13 @@ public class MainActivity extends AppCompatActivity implements MobileModel {
     private CaptureRequest mPreviewRequest;
     private Semaphore mCameraOpenCloseLock = new Semaphore(1);
     private static final int REQUEST_CAMERA_PERMISSION = 1;
+
+    private ImageView imageViewWhite;
+    private ImageView imageViewBlack;
+
+    ScheduledExecutorService scheduler
+            = Executors.newSingleThreadScheduledExecutor();
+
 
     private BlockingQueue<Bitmap> photoQueue = new LinkedBlockingQueue<Bitmap>();
 
@@ -123,6 +134,24 @@ public class MainActivity extends AppCompatActivity implements MobileModel {
                 activity.takeSnapshot();
             }
 
+            if(command != null && command.equals("WHITE")) {
+                Log.d("screen", "white");
+                activity.imageViewWhite.setVisibility(View.VISIBLE);
+            }
+
+            if(command != null && command.equals("BLACK")) {
+                Log.d("screen", "black");
+                activity.imageViewBlack.setVisibility(View.VISIBLE);
+                activity.button.setVisibility(View.INVISIBLE);
+            }
+
+            if(command != null && command.equals("NORMAL")) {
+                Log.d("screen", "cleared");
+                activity.imageViewBlack.setVisibility(View.INVISIBLE);
+                activity.imageViewWhite.setVisibility(View.INVISIBLE);
+                activity.button.setVisibility(View.VISIBLE);
+            }
+
         }
     }
 
@@ -137,6 +166,9 @@ public class MainActivity extends AppCompatActivity implements MobileModel {
         radioButtonMethod1 = (RadioButton) findViewById(R.id.radioButtonMethod1);
         radioButtonMethod2 = (RadioButton) findViewById(R.id.radioButtonMethod2);
         statusTextView = (TextView) findViewById(R.id.statusView);
+        imageViewWhite = (ImageView) findViewById(R.id.imageView3);
+        imageViewBlack = (ImageView) findViewById(R.id.imageView2);
+        button = (Button) findViewById(R.id.button);
         radioButtonMethod1.toggle();
         chosenMethod = method1;
     }
@@ -145,6 +177,17 @@ public class MainActivity extends AppCompatActivity implements MobileModel {
     public Bitmap getPhoto(){
         try {
             takePhoto();
+            return photoQueue.take();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    @Override
+    public Bitmap getPhotoWithScreenFlash(){
+        try {
+            takePhotoWithScreenFlash();
             return photoQueue.take();
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -259,6 +302,51 @@ public class MainActivity extends AppCompatActivity implements MobileModel {
         executor.execute(r);
     }
 
+    public void takePhotoWithScreenFlash() {
+        Message msg = myHandler.obtainMessage();
+        Bundle b = new Bundle();
+        b.putString("CMD", "BLACK");
+        msg.setData(b);
+        myHandler.sendMessage(msg);
+
+        Runnable makeScreenWhite = new Runnable() {
+
+            @Override
+            public void run() {
+                Message msg = myHandler.obtainMessage();
+                Bundle b = new Bundle();
+                b.putString("CMD", "WHITE");
+                msg.setData(b);
+                myHandler.sendMessage(msg);
+
+            }
+        };
+
+        Runnable makeScreenNormalAgain = new Runnable() {
+
+            @Override
+            public void run() {
+                Message msg = myHandler.obtainMessage();
+                Bundle b = new Bundle();
+                b.putString("CMD", "NORMAL");
+                msg.setData(b);
+                myHandler.sendMessage(msg);
+
+            }
+        };
+
+        Runnable TakePhoto = new Runnable() {
+            @Override
+            public void run() {
+                takePhoto();
+            }
+        };
+
+        scheduler.schedule(makeScreenWhite, 1000, TimeUnit.MILLISECONDS);
+        scheduler.schedule(TakePhoto, 1001, TimeUnit.MILLISECONDS);
+        scheduler.schedule(makeScreenNormalAgain, 1500, TimeUnit.MILLISECONDS);
+    }
+
     public void takePhoto(){
         Message msg = myHandler.obtainMessage();
         Bundle b = new Bundle();
@@ -345,6 +433,7 @@ public class MainActivity extends AppCompatActivity implements MobileModel {
             public void onImageAvailable(ImageReader reader) {
                 Image image = null;
                 try {
+                    Log.d("photo", "available");
                     image = reader.acquireLatestImage();
                     Image.Plane[] planes = image.getPlanes();
                     ByteBuffer buffer = planes[0].getBuffer();
