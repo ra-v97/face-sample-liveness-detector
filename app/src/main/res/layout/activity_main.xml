@@ -72,7 +72,7 @@
                 android:id="@+id/button"
                 android:layout_width="152dp"
                 android:layout_height="64dp"
-                android:onClick="buttClick"
+                android:onClick="onDetectButtonClick"
                 android:text="@string/detect_button_label"
                 android:textSize="18sp" />
         </LinearLayout>

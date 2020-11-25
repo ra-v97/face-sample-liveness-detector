@@ -8,13 +8,13 @@ public interface MobileModel {
      * This method lets you invoke from any thread a context change on UI that will indicate that
      * face shown on picture is fake
      */
-    public void setFake();
+    void setFake();
 
     /*
      * This method lets you invoke from any thread a context change on UI that will indicate that
      * face shown on picture is real
      */
-    public void setReal();
+    void setReal();
 
-    public Bitmap getPhoto();
+    Bitmap getPhoto();
 }

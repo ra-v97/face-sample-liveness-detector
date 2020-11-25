@@ -1,14 +1,14 @@
-package agh.edu.pl.facelivenessdetection.model.method1;
+package agh.edu.pl.facelivenessdetection.detector;
 
 import android.graphics.Bitmap;
 
 import agh.edu.pl.facelivenessdetection.model.MobileModel;
 
-public class Method extends Thread {
+public class DetectorMethod extends Thread {
 
     MobileModel mobileModel;
 
-    public Method(MobileModel mobileModel) {
+    public DetectorMethod(MobileModel mobileModel) {
         this.mobileModel = mobileModel;
     }
 

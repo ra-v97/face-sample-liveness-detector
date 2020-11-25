@@ -24,7 +24,6 @@ import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CaptureRequest;
-import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
 import android.media.ImageReader;
@@ -41,6 +40,9 @@ import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
+
 import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -48,32 +50,96 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-import agh.edu.pl.facelivenessdetection.model.LivenessDetector;
+import agh.edu.pl.facelivenessdetection.detector.FaceLivenessDetectorType;
+import agh.edu.pl.facelivenessdetection.model.FaceLivenessDetectionModel;
 import agh.edu.pl.facelivenessdetection.model.MobileModel;
-import agh.edu.pl.facelivenessdetection.model.method1.Method1Detector;
-import agh.edu.pl.facelivenessdetection.model.method2.Method2Detector;
 
 public class MainActivity extends AppCompatActivity implements MobileModel {
-
-    private LivenessDetector method1 = new Method1Detector();
-    private LivenessDetector method2 = new Method2Detector();
-
-    private LivenessDetector chosenMethod;
-
+    /*
+     *  Constants definition
+     */
     private static final int MAX_PREVIEW_WIDTH = 1920;
+
     private static final int MAX_PREVIEW_HEIGHT = 1080;
+    /*
+     * UI Elements
+     */
+    private RadioButton method1RadioButton;
 
-    private TextureView mTextureView;
-    private RadioButton radioButtonMethod1;
-    private RadioButton radioButtonMethod2;
-    private TextView statusTextView;
+    private RadioButton method2RadioButton;
 
+    private TextView livenessStatusTextView;
+
+    private TextureView cameraPreviewTextureView;
+    /*
+     * Required elements
+     */
+    private final FaceLivenessDetectionModel faceLivenessDetectionModel;
+
+    private final BiMap<FaceLivenessDetectorType, RadioButton> faceLivenessDetectorRadioButtonBiMap;
+
+    public MainActivity() {
+        faceLivenessDetectionModel = new FaceLivenessDetectionModel();
+
+        faceLivenessDetectorRadioButtonBiMap = HashBiMap.create();
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        cameraPreviewTextureView = findViewById(R.id.texture);
+        method1RadioButton = findViewById(R.id.radioButtonMethod1);
+        method2RadioButton = findViewById(R.id.radioButtonMethod2);
+        livenessStatusTextView = findViewById(R.id.statusView);
+
+        initializeViewElements();
+        setActiveFaceDetectionMethod(FaceLivenessDetectorType.FACE_ACTIVITY_METHOD);
+    }
+
+    private void initializeViewElements(){
+        faceLivenessDetectorRadioButtonBiMap.put(FaceLivenessDetectorType.FACE_ACTIVITY_METHOD,
+                method1RadioButton);
+        faceLivenessDetectorRadioButtonBiMap.put(FaceLivenessDetectorType.FACE_FLASHING_METHOD,
+                method2RadioButton);
+    }
+
+    public void onDetectButtonClick(View view) {
+        faceLivenessDetectionModel.resolveActiveFaceLivenessDetector()
+                .map(faceLivenessDetector -> faceLivenessDetector.detect(this))
+                .ifPresent(executor::execute);
+    }
+
+    public void onToggleMethod1(View view) {
+        setActiveFaceDetectionMethod(method1RadioButton);
+    }
+
+    public void onToggleMethod2(View view) {
+        setActiveFaceDetectionMethod(method2RadioButton);
+    }
+
+    private void setActiveFaceDetectionMethod(FaceLivenessDetectorType activeFaceDetectionMethod) {
+        faceLivenessDetectionModel
+                .setActiveFaceLivenessDetector(activeFaceDetectionMethod.getDetector());
+        Optional.ofNullable(faceLivenessDetectorRadioButtonBiMap.get(activeFaceDetectionMethod))
+                .ifPresent(RadioButton::toggle);
+    }
+
+    private void setActiveFaceDetectionMethod(RadioButton methodRadioButton) {
+        Optional.ofNullable(faceLivenessDetectorRadioButtonBiMap.inverse().get(methodRadioButton))
+                .ifPresent(livenessDetector -> faceLivenessDetectionModel
+                        .setActiveFaceLivenessDetector(livenessDetector.getDetector()));
+        changeStatusToUnknown();
+    }
+    
     private Size largest;
     private String mCameraId;
     private CameraCaptureSession mCaptureSession;
@@ -101,25 +167,27 @@ public class MainActivity extends AppCompatActivity implements MobileModel {
 
     private static class MyHandler extends Handler {
         private final WeakReference<MainActivity> sActivity;
-        MyHandler(MainActivity activity){
+
+        MyHandler(MainActivity activity) {
             sActivity = new WeakReference<MainActivity>(activity);
         }
+
         public void handleMessage(Message msg) {
             MainActivity activity = sActivity.get();
             String toggle = msg.getData().getString("STATUS");
             String command = msg.getData().getString("CMD");
 
-            if(toggle != null) {
-                if(toggle.equals("REAL")) {
+            if (toggle != null) {
+                if (toggle.equals("REAL")) {
                     activity.changeStatusToReal();
-                } else if(toggle.equals("FAKE")) {
+                } else if (toggle.equals("FAKE")) {
                     activity.changeStatusToFake();
                 } else {
                     activity.changeStatusToUnknown();
                 }
             }
 
-            if(command != null && command.equals("TAKE_PHOTO")) {
+            if (command != null && command.equals("TAKE_PHOTO")) {
                 activity.takeSnapshot();
             }
 
@@ -129,20 +197,7 @@ public class MainActivity extends AppCompatActivity implements MobileModel {
     Handler myHandler = new MyHandler(this);
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
-        mTextureView = (TextureView) findViewById(R.id.texture);
-        radioButtonMethod1 = (RadioButton) findViewById(R.id.radioButtonMethod1);
-        radioButtonMethod2 = (RadioButton) findViewById(R.id.radioButtonMethod2);
-        statusTextView = (TextView) findViewById(R.id.statusView);
-        radioButtonMethod1.toggle();
-        chosenMethod = method1;
-    }
-
-    @Override
-    public Bitmap getPhoto(){
+    public Bitmap getPhoto() {
         try {
             takePhoto();
             return photoQueue.take();
@@ -161,10 +216,10 @@ public class MainActivity extends AppCompatActivity implements MobileModel {
         // available, and "onSurfaceTextureAvailable" will not be called. In that case, we can open
         // a camera and start preview from here (otherwise, we wait until the surface is ready in
         // the SurfaceTextureListener).
-        if (mTextureView.isAvailable()) {
-            openCamera(mTextureView.getWidth(), mTextureView.getHeight());
+        if (cameraPreviewTextureView.isAvailable()) {
+            openCamera(cameraPreviewTextureView.getWidth(), cameraPreviewTextureView.getHeight());
         } else {
-            mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
+            cameraPreviewTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
         }
     }
 
@@ -208,11 +263,10 @@ public class MainActivity extends AppCompatActivity implements MobileModel {
         @Override
         public void onSurfaceTextureUpdated(SurfaceTexture texture) {
         }
-
     };
 
     @Override
-    public void setFake(){
+    public void setFake() {
         Message msg = myHandler.obtainMessage();
         Bundle b = new Bundle();
         b.putString("STATUS", "FAKE");
@@ -221,12 +275,12 @@ public class MainActivity extends AppCompatActivity implements MobileModel {
     }
 
     void changeStatusToFake() {
-        statusTextView.setText("FAKE");
-        statusTextView.setBackgroundColor(Color.parseColor("#FF0000"));
+        livenessStatusTextView.setText("FAKE");
+        livenessStatusTextView.setBackgroundColor(Color.parseColor("#FF0000"));
     }
 
     @Override
-    public void setReal(){
+    public void setReal() {
         Message msg = myHandler.obtainMessage();
         Bundle b = new Bundle();
         b.putString("STATUS", "REAL");
@@ -235,31 +289,16 @@ public class MainActivity extends AppCompatActivity implements MobileModel {
     }
 
     void changeStatusToReal() {
-        statusTextView.setText("REAL");
-        statusTextView.setBackgroundColor(Color.parseColor("#008000"));
+        livenessStatusTextView.setText("REAL");
+        livenessStatusTextView.setBackgroundColor(Color.parseColor("#008000"));
     }
 
-    void changeStatusToUnknown(){
-        statusTextView.setText("UNKNOWN");
-        statusTextView.setBackgroundColor(Color.parseColor("#FFFF00"));
+    void changeStatusToUnknown() {
+        livenessStatusTextView.setText("UNKNOWN");
+        livenessStatusTextView.setBackgroundColor(Color.parseColor("#FFFF00"));
     }
 
-    public void onToggleMethod1(View view){
-        chosenMethod = method1;
-        changeStatusToUnknown();
-    }
-
-    public void onToggleMethod2(View view){
-        chosenMethod = method2;
-        changeStatusToUnknown();
-    }
-
-    public void buttClick(View view){
-        Runnable r = chosenMethod.detect(this);
-        executor.execute(r);
-    }
-
-    public void takePhoto(){
+    public void takePhoto() {
         Message msg = myHandler.obtainMessage();
         Bundle b = new Bundle();
         b.putString("CMD", "TAKE_PHOTO");
@@ -281,7 +320,7 @@ public class MainActivity extends AppCompatActivity implements MobileModel {
             captureBuilder.set(CaptureRequest.CONTROL_AE_MODE,
                     CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
 
-            mCaptureSession.capture(captureBuilder.build(), new CameraCaptureSession.CaptureCallback(){
+            mCaptureSession.capture(captureBuilder.build(), new CameraCaptureSession.CaptureCallback() {
 
             }, null);
         } catch (CameraAccessException e) {
@@ -333,13 +372,13 @@ public class MainActivity extends AppCompatActivity implements MobileModel {
         }
     }
 
-    private void setUpImageReader(){
+    private void setUpImageReader() {
         mImageReader = ImageReader.newInstance(largest.getWidth(), largest.getHeight(),
                 ImageFormat.JPEG, /*maxImages*/2);
         mImageReader.setOnImageAvailableListener(
                 null, mBackgroundHandler);
 
-        mImageReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener(){
+        mImageReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
 
             @Override
             public void onImageAvailable(ImageReader reader) {
@@ -426,7 +465,7 @@ public class MainActivity extends AppCompatActivity implements MobileModel {
 
     private void createCameraPreviewSession() {
         try {
-            SurfaceTexture texture = mTextureView.getSurfaceTexture();
+            SurfaceTexture texture = cameraPreviewTextureView.getSurfaceTexture();
             assert texture != null;
 
             // We configure the size of default buffer to be the size of camera preview we want.
@@ -559,7 +598,7 @@ public class MainActivity extends AppCompatActivity implements MobileModel {
     }
 
     private void configureTransform(int viewWidth, int viewHeight) {
-        if (null == mTextureView || null == mPreviewSize) {
+        if (null == cameraPreviewTextureView || null == mPreviewSize) {
             return;
         }
         int rotation = getWindowManager().getDefaultDisplay().getRotation();
@@ -579,7 +618,7 @@ public class MainActivity extends AppCompatActivity implements MobileModel {
         } else if (Surface.ROTATION_180 == rotation) {
             matrix.postRotate(180, centerX, centerY);
         }
-        mTextureView.setTransform(matrix);
+        cameraPreviewTextureView.setTransform(matrix);
     }
 
     private final CameraDevice.StateCallback mStateCallback = new CameraDevice.StateCallback() {
