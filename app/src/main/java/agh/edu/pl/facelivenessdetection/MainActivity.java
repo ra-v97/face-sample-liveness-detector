@@ -87,7 +87,6 @@ public class MainActivity extends AppCompatActivity implements MobileModel {
 
     public MainActivity() {
         faceLivenessDetectionModel = new FaceLivenessDetectionModel();
-
         faceLivenessDetectorRadioButtonBiMap = HashBiMap.create();
     }
 

@@ -2,7 +2,6 @@ package agh.edu.pl.facelivenessdetection.detector;
 
 import androidx.core.util.Supplier;
 
-import agh.edu.pl.facelivenessdetection.detector.FaceLivenessDetector;
 import agh.edu.pl.facelivenessdetection.detector.activity.FaceActivityLivenessDetector;
 import agh.edu.pl.facelivenessdetection.detector.flashing.FaceFlashingLivenessDetector;
 
