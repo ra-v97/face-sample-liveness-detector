@@ -12,7 +12,6 @@ import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.graphics.ImageFormat;
 import android.graphics.Matrix;
 import android.graphics.Point;
@@ -43,7 +42,6 @@ import android.widget.Toast;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 
-import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,10 +56,13 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import agh.edu.pl.facelivenessdetection.detector.FaceLivenessDetectorType;
+import agh.edu.pl.facelivenessdetection.handler.CommandHandler;
+import agh.edu.pl.facelivenessdetection.handler.StatusChangeHandler;
 import agh.edu.pl.facelivenessdetection.model.FaceLivenessDetectionModel;
-import agh.edu.pl.facelivenessdetection.model.MobileModel;
+import agh.edu.pl.facelivenessdetection.model.LivenessDetectionStatus;
+import agh.edu.pl.facelivenessdetection.visuals.StatusVisualizer;
 
-public class MainActivity extends AppCompatActivity implements MobileModel {
+public class MainActivity extends AppCompatActivity implements StatusVisualizer {
     /*
      *  Constants definition
      */
@@ -85,9 +86,16 @@ public class MainActivity extends AppCompatActivity implements MobileModel {
 
     private final BiMap<FaceLivenessDetectorType, RadioButton> faceLivenessDetectorRadioButtonBiMap;
 
+    private final StatusChangeHandler statusChangeHandler;
+
+    private final CommandHandler commandHandler;
+
     public MainActivity() {
         faceLivenessDetectionModel = new FaceLivenessDetectionModel();
         faceLivenessDetectorRadioButtonBiMap = HashBiMap.create();
+
+        statusChangeHandler = new StatusChangeHandler(this);
+        commandHandler = new CommandHandler(this);
     }
 
     @Override
@@ -136,9 +144,34 @@ public class MainActivity extends AppCompatActivity implements MobileModel {
         Optional.ofNullable(faceLivenessDetectorRadioButtonBiMap.inverse().get(methodRadioButton))
                 .ifPresent(livenessDetector -> faceLivenessDetectionModel
                         .setActiveFaceLivenessDetector(livenessDetector.getDetector()));
-        changeStatusToUnknown();
+        setDetectionStatus(LivenessDetectionStatus.UNKNOWN);
     }
-    
+
+    public void setDetectionStatus(LivenessDetectionStatus status) {
+        livenessStatusTextView.setText(getStatusLabel(status));
+        livenessStatusTextView.setBackgroundColor(status.getColor());
+    }
+
+    private String getStatusLabel(LivenessDetectionStatus status){
+        switch (status){
+            case FAKE:
+                return getString(R.string.fake_status_label);
+            case REAL:
+                return getString(R.string.real_status_label);
+            default:
+                return getString(R.string.unknown_status_label);
+        }
+    }
+
+    @Override
+    public void visualizeStatus(LivenessDetectionStatus status) {
+        final Message msg = statusChangeHandler.obtainMessage();
+        final Bundle b = new Bundle();
+        b.putString(StatusChangeHandler.STATUS_KEY, status.getKey());
+        msg.setData(b);
+        statusChangeHandler.sendMessage(msg);
+    }
+
     private Size largest;
     private String mCameraId;
     private CameraCaptureSession mCaptureSession;
@@ -158,42 +191,12 @@ public class MainActivity extends AppCompatActivity implements MobileModel {
 
     Executor executor = new ThreadPerTaskExecutor();
 
+
     class ThreadPerTaskExecutor implements Executor {
         public void execute(Runnable r) {
             new Thread(r).start();
         }
     }
-
-    private static class MyHandler extends Handler {
-        private final WeakReference<MainActivity> sActivity;
-
-        MyHandler(MainActivity activity) {
-            sActivity = new WeakReference<MainActivity>(activity);
-        }
-
-        public void handleMessage(Message msg) {
-            MainActivity activity = sActivity.get();
-            String toggle = msg.getData().getString("STATUS");
-            String command = msg.getData().getString("CMD");
-
-            if (toggle != null) {
-                if (toggle.equals("REAL")) {
-                    activity.changeStatusToReal();
-                } else if (toggle.equals("FAKE")) {
-                    activity.changeStatusToFake();
-                } else {
-                    activity.changeStatusToUnknown();
-                }
-            }
-
-            if (command != null && command.equals("TAKE_PHOTO")) {
-                activity.takeSnapshot();
-            }
-
-        }
-    }
-
-    Handler myHandler = new MyHandler(this);
 
     @Override
     public Bitmap getPhoto() {
@@ -263,39 +266,6 @@ public class MainActivity extends AppCompatActivity implements MobileModel {
         public void onSurfaceTextureUpdated(SurfaceTexture texture) {
         }
     };
-
-    @Override
-    public void setFake() {
-        Message msg = myHandler.obtainMessage();
-        Bundle b = new Bundle();
-        b.putString("STATUS", "FAKE");
-        msg.setData(b);
-        myHandler.sendMessage(msg);
-    }
-
-    void changeStatusToFake() {
-        livenessStatusTextView.setText("FAKE");
-        livenessStatusTextView.setBackgroundColor(Color.parseColor("#FF0000"));
-    }
-
-    @Override
-    public void setReal() {
-        Message msg = myHandler.obtainMessage();
-        Bundle b = new Bundle();
-        b.putString("STATUS", "REAL");
-        msg.setData(b);
-        myHandler.sendMessage(msg);
-    }
-
-    void changeStatusToReal() {
-        livenessStatusTextView.setText("REAL");
-        livenessStatusTextView.setBackgroundColor(Color.parseColor("#008000"));
-    }
-
-    void changeStatusToUnknown() {
-        livenessStatusTextView.setText("UNKNOWN");
-        livenessStatusTextView.setBackgroundColor(Color.parseColor("#FFFF00"));
-    }
 
     public void takePhoto() {
         Message msg = myHandler.obtainMessage();

@@ -4,6 +4,8 @@
     <string name="liveness_detection_method_1_name">Method 1</string>
     <string name="liveness_detection_method_2_name">Method 2</string>
     <string name="unknown_status_label">UNKNOWN</string>
+    <string name="fake_status_label">FAKE</string>
+    <string name="real_status_label">REAL</string>
     <string name="detect_button_label">DETECT</string>
     <string name="status_label">STATUS</string>
     <string name="face_liveness_detection_methods_label">Face liveness detection methods:</string>
