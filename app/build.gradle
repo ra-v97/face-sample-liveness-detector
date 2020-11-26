@@ -7,8 +7,8 @@ android {
     buildToolsVersion "30.0.2"
 
     defaultConfig {
-        applicationId "agh.edu.pl.facelivenessdetection"
-        minSdkVersion 26
+        applicationId "pl.edu.agh.facelivenessdetection"
+        minSdkVersion 24
         targetSdkVersion 30
         versionCode 1
         versionName "1.0"

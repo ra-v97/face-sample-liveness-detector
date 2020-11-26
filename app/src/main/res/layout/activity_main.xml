@@ -44,7 +44,7 @@
 
     </RadioGroup>
 
-    <agh.edu.pl.facelivenessdetection.camera.CameraSourcePreview
+    <pl.edu.agh.facelivenessdetection.camera.CameraSourcePreview
         android:id="@+id/preview_view"
         android:layout_width="360dp"
         android:layout_height="0dp"
@@ -54,7 +54,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/radioGroup"/>
 
-    <agh.edu.pl.facelivenessdetection.camera.GraphicOverlay
+    <pl.edu.agh.facelivenessdetection.camera.GraphicOverlay
         android:id="@+id/graphic_overlay"
         android:layout_width="360dp"
         android:layout_height="0dp"
