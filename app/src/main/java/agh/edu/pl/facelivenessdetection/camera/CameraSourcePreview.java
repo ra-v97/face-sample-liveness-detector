@@ -2,6 +2,7 @@ package agh.edu.pl.facelivenessdetection.camera;
 
 import android.content.Context;
 import android.content.res.Configuration;
+import android.util.AttributeSet;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -13,7 +14,7 @@ import java.io.IOException;
 
 import agh.edu.pl.facelivenessdetection.preference.PreferenceUtils;
 
-public class CameraPreviewSource extends ViewGroup {
+public class CameraSourcePreview extends ViewGroup {
 
     private static final String TAG = "MIDemoApp:Preview";
 
@@ -25,7 +26,7 @@ public class CameraPreviewSource extends ViewGroup {
 
     private GraphicOverlay overlay;
 
-    public CameraPreviewSource(Context context) {
+    public CameraSourcePreview(Context context, AttributeSet attrs) {
         super(context);
         this.context = context;
         startRequested = false;

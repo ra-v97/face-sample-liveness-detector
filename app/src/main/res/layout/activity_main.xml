@@ -44,17 +44,24 @@
 
     </RadioGroup>
 
-    <TextureView
-        android:id="@+id/texture"
+    <agh.edu.pl.facelivenessdetection.camera.CameraSourcePreview
+        android:id="@+id/preview_view"
         android:layout_width="360dp"
         android:layout_height="0dp"
-        android:layout_marginTop="12dp"
-        android:layout_marginBottom="32dp"
+        android:layout_marginTop="8dp"
         app:layout_constraintBottom_toTopOf="@+id/linearLayout"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.49"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/radioGroup" />
+
+    <agh.edu.pl.facelivenessdetection.camera.GraphicOverlay
+        android:id="@+id/graphic_overlay"
+        android:layout_width="360dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="@+id/preview_view"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/radioGroup"/>
 
     <LinearLayout
         android:id="@+id/linearLayout"
@@ -66,7 +73,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/texture">
+        app:layout_constraintTop_toBottomOf="@+id/preview_view">
 
         <LinearLayout
             android:layout_width="wrap_content"
