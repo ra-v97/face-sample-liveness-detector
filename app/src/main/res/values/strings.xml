@@ -8,5 +8,6 @@
     <string name="real_status_label">REAL</string>
     <string name="detect_button_label">DETECT</string>
     <string name="status_label">STATUS</string>
+    <string name="camera_permissions_not_granted_message">ERROR: Camera permissions not granted</string>
     <string name="face_liveness_detection_methods_label">Face liveness detection methods:</string>
 </resources>
