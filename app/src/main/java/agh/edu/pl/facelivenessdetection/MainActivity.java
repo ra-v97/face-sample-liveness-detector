@@ -11,8 +11,6 @@ import android.os.Bundle;
 import android.os.Message;
 import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.CompoundButton;
 import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -86,6 +84,7 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
         method1RadioButton = findViewById(R.id.radioButtonMethod1);
         method2RadioButton = findViewById(R.id.radioButtonMethod2);
 
+        preview = findViewById(R.id.preview_view);
         if (preview == null) {
             Log.d(TAG, "Preview is null");
         }
@@ -251,7 +250,7 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
                     Log.d(TAG, "resume: graphOverlay is null");
                 }
                 preview.start(cameraSource, graphicOverlay);
-            } catch (IOException e) {
+            } catch (NullPointerException | IOException e) {
                 Log.e(TAG, "Unable to start camera source.", e);
                 cameraSource.release();
                 cameraSource = null;

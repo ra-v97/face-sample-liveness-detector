@@ -27,7 +27,7 @@ public class CameraSourcePreview extends ViewGroup {
     private GraphicOverlay overlay;
 
     public CameraSourcePreview(Context context, AttributeSet attrs) {
-        super(context);
+        super(context, attrs);
         this.context = context;
         startRequested = false;
         surfaceAvailable = false;

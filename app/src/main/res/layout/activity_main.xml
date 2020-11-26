@@ -52,16 +52,17 @@
         app:layout_constraintBottom_toTopOf="@+id/linearLayout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/radioGroup" />
+        app:layout_constraintTop_toBottomOf="@+id/radioGroup"/>
 
     <agh.edu.pl.facelivenessdetection.camera.GraphicOverlay
         android:id="@+id/graphic_overlay"
         android:layout_width="360dp"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toBottomOf="@+id/preview_view"
+        android:layout_marginTop="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/linearLayout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/radioGroup"/>
+        app:layout_constraintTop_toBottomOf="@+id/radioGroup" />
 
     <LinearLayout
         android:id="@+id/linearLayout"
