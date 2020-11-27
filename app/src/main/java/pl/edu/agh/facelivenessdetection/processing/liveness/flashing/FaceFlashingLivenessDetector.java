@@ -1,7 +1,6 @@
 package pl.edu.agh.facelivenessdetection.processing.liveness.flashing;
 
 import android.content.Context;
-import android.graphics.PointF;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -12,13 +11,11 @@ import com.google.mlkit.vision.face.Face;
 import com.google.mlkit.vision.face.FaceDetection;
 import com.google.mlkit.vision.face.FaceDetector;
 import com.google.mlkit.vision.face.FaceDetectorOptions;
-import com.google.mlkit.vision.face.FaceLandmark;
 
 import java.util.List;
-import java.util.Locale;
 
 import pl.edu.agh.facelivenessdetection.processing.FaceLivenessDetector;
-import pl.edu.agh.facelivenessdetection.processing.VisionProcessorBase;
+import pl.edu.agh.facelivenessdetection.processing.vision.VisionProcessorBase;
 import pl.edu.agh.facelivenessdetection.visualisation.DetectionVisualizer;
 import pl.edu.agh.facelivenessdetection.visualisation.GraphicOverlay;
 import pl.edu.agh.facelivenessdetection.visualisation.drawer.FaceGraphic;

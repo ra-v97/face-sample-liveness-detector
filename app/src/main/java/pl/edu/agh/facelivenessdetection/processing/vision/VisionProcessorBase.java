@@ -1,4 +1,4 @@
-package pl.edu.agh.facelivenessdetection.processing;
+package pl.edu.agh.facelivenessdetection.processing.vision;
 
 import android.app.ActivityManager;
 import android.content.Context;
@@ -23,6 +23,7 @@ import java.nio.ByteBuffer;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import pl.edu.agh.facelivenessdetection.processing.VisionImageProcessor;
 import pl.edu.agh.facelivenessdetection.utils.BitmapUtils;
 import pl.edu.agh.facelivenessdetection.model.FrameMetadata;
 import pl.edu.agh.facelivenessdetection.visualisation.drawer.CameraImageGraphic;

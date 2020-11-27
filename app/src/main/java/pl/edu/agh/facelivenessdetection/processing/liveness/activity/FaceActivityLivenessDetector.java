@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Locale;
 
 import pl.edu.agh.facelivenessdetection.processing.FaceLivenessDetector;
-import pl.edu.agh.facelivenessdetection.processing.VisionProcessorBase;
+import pl.edu.agh.facelivenessdetection.processing.vision.VisionProcessorBase;
 import pl.edu.agh.facelivenessdetection.visualisation.DetectionVisualizer;
 import pl.edu.agh.facelivenessdetection.visualisation.GraphicOverlay;
 import pl.edu.agh.facelivenessdetection.visualisation.drawer.FaceGraphic;
