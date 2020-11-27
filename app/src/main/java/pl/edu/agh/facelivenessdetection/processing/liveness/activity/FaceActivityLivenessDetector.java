@@ -1,15 +1,13 @@
-package pl.edu.agh.facelivenessdetection.detector.face;
+package pl.edu.agh.facelivenessdetection.processing.liveness.activity;
 
 import android.content.Context;
 import android.graphics.PointF;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import android.util.Log;
-
 import com.google.android.gms.tasks.Task;
 import com.google.mlkit.vision.common.InputImage;
-
 import com.google.mlkit.vision.face.Face;
 import com.google.mlkit.vision.face.FaceDetection;
 import com.google.mlkit.vision.face.FaceDetector;
@@ -19,16 +17,19 @@ import com.google.mlkit.vision.face.FaceLandmark;
 import java.util.List;
 import java.util.Locale;
 
-import pl.edu.agh.facelivenessdetection.camera.GraphicOverlay;
-import pl.edu.agh.facelivenessdetection.camera.VisionProcessorBase;
+import pl.edu.agh.facelivenessdetection.processing.FaceLivenessDetector;
+import pl.edu.agh.facelivenessdetection.processing.VisionProcessorBase;
+import pl.edu.agh.facelivenessdetection.visualisation.DetectionVisualizer;
+import pl.edu.agh.facelivenessdetection.visualisation.GraphicOverlay;
+import pl.edu.agh.facelivenessdetection.visualisation.drawer.FaceGraphic;
 
-public class FaceDetectorProcessor extends VisionProcessorBase<List<Face>> {
+public class FaceActivityLivenessDetector extends VisionProcessorBase<List<Face>> implements FaceLivenessDetector {
 
     private static final String TAG = "FaceDetectorProcessor";
 
     private final FaceDetector detector;
 
-    public FaceDetectorProcessor(Context context) {
+    public FaceActivityLivenessDetector(Context context) {
         this(
                 context,
                 new FaceDetectorOptions.Builder()
@@ -37,7 +38,7 @@ public class FaceDetectorProcessor extends VisionProcessorBase<List<Face>> {
                         .build());
     }
 
-    public FaceDetectorProcessor(Context context, FaceDetectorOptions options) {
+    public FaceActivityLivenessDetector(Context context, FaceDetectorOptions options) {
         super(context);
         Log.v(MANUAL_TESTING_LOG, "Face detector options: " + options);
         detector = FaceDetection.getClient(options);
@@ -58,7 +59,7 @@ public class FaceDetectorProcessor extends VisionProcessorBase<List<Face>> {
     protected void onSuccess(@NonNull List<Face> faces, @NonNull GraphicOverlay graphicOverlay) {
         for (Face face : faces) {
             graphicOverlay.add(new FaceGraphic(graphicOverlay, face));
-            logExtrasForTesting(face);
+            //logExtrasForTesting(face);
         }
     }
 
@@ -128,5 +129,15 @@ public class FaceDetectorProcessor extends VisionProcessorBase<List<Face>> {
     @Override
     protected void onFailure(@NonNull Exception e) {
         Log.e(TAG, "Face detection failed " + e);
+    }
+
+    @Override
+    public void livenessDetectionTrigger(DetectionVisualizer visualizer) {
+        Log.i(TAG, "FaceActivityLivenessDetector face liveness detection triggered");
+    }
+
+    @Override
+    public void terminate() {
+        Log.i(TAG, "FaceActivityLivenessDetector face liveness detection terminated");
     }
 }

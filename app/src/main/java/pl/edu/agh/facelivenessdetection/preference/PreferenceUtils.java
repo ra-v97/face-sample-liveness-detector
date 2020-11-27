@@ -2,39 +2,26 @@ package pl.edu.agh.facelivenessdetection.preference;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.preference.PreferenceManager;
+
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.annotation.StringRes;
 
-import com.google.android.gms.common.images.Size;
-import com.google.common.base.Preconditions;
 import com.google.mlkit.vision.face.FaceDetectorOptions;
 
 import pl.edu.agh.facelivenessdetection.R;
-import pl.edu.agh.facelivenessdetection.camera.CameraSource;
 
 public class PreferenceUtils {
 
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @Nullable
-    public static CameraSource.SizePair getCameraPreviewSizePair(Context context, int cameraId) {
-        Preconditions.checkArgument(
-                cameraId == CameraSource.CAMERA_FACING_BACK
-                        || cameraId == CameraSource.CAMERA_FACING_FRONT);
-        String previewSizePrefKey;
-        String pictureSizePrefKey;
-        if (cameraId == CameraSource.CAMERA_FACING_BACK) {
-            previewSizePrefKey = context.getString(R.string.pref_key_rear_camera_preview_size);
-            pictureSizePrefKey = context.getString(R.string.pref_key_rear_camera_picture_size);
-        } else {
-            previewSizePrefKey = context.getString(R.string.pref_key_front_camera_preview_size);
-            pictureSizePrefKey = context.getString(R.string.pref_key_front_camera_picture_size);
-        }
-
+    public static android.util.Size getCameraXTargetResolution(Context context) {
+        String prefKey = context.getString(R.string.pref_key_camerax_target_resolution);
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         try {
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-            return new CameraSource.SizePair(
-                    Size.parseSize(sharedPreferences.getString(previewSizePrefKey, null)),
-                    Size.parseSize(sharedPreferences.getString(pictureSizePrefKey, null)));
+            return android.util.Size.parseSize(sharedPreferences.getString(prefKey, null));
         } catch (Exception e) {
             return null;
         }
@@ -103,5 +90,6 @@ public class PreferenceUtils {
         return Integer.parseInt(sharedPreferences.getString(prefKey, String.valueOf(defaultValue)));
     }
 
-    private PreferenceUtils() {}
+    private PreferenceUtils() {
+    }
 }

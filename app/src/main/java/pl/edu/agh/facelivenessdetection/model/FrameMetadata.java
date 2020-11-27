@@ -1,9 +1,11 @@
-package pl.edu.agh.facelivenessdetection.camera;
+package pl.edu.agh.facelivenessdetection.model;
 
 public class FrameMetadata {
 
     private final int width;
+
     private final int height;
+
     private final int rotation;
 
     public int getWidth() {
@@ -24,7 +26,9 @@ public class FrameMetadata {
         this.rotation = rotation;
     }
 
-    /** Builder of {@link FrameMetadata}. */
+    /**
+     * Builder of {@link FrameMetadata}.
+     */
     public static class Builder {
 
         private int width;

@@ -1,4 +1,4 @@
-package pl.edu.agh.facelivenessdetection.controller;
+package pl.edu.agh.facelivenessdetection.multithreading;
 
 import androidx.annotation.NonNull;
 
@@ -10,7 +10,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * cancellation of submitted runnables.
  */
 public class ScopedExecutor implements Executor {
+
     private final Executor executor;
+
     private final AtomicBoolean shutdown = new AtomicBoolean();
 
     public ScopedExecutor(@NonNull Executor executor) {

@@ -22,7 +22,7 @@ public enum LivenessDetectionStatus {
         return statusColor;
     }
 
-    public String getKey(){
+    public String getKey() {
         return key;
     }
 

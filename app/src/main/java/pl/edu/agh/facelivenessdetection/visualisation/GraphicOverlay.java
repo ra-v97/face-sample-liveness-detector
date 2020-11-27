@@ -1,11 +1,13 @@
-package pl.edu.agh.facelivenessdetection.camera;
+package pl.edu.agh.facelivenessdetection.visualisation;
 
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.util.AttributeSet;
 import android.view.View;
+
 import com.google.common.base.Preconditions;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,7 +30,7 @@ import java.util.List;
  *       coordinate from the image's coordinate system to the view coordinate system.
  * </ol>
  */
-public class GraphicOverlay extends View{
+public class GraphicOverlay extends View {
     private final Object lock = new Object();
     private final List<Graphic> graphics = new ArrayList<>();
     // Matrix for transforming from image coordinates to overlay view coordinates.
@@ -75,12 +77,16 @@ public class GraphicOverlay extends View{
          */
         public abstract void draw(Canvas canvas);
 
-        /** Adjusts the supplied value from the image scale to the view scale. */
+        /**
+         * Adjusts the supplied value from the image scale to the view scale.
+         */
         public float scale(float imagePixel) {
             return imagePixel * overlay.scaleFactor;
         }
 
-        /** Returns the application context of the app. */
+        /**
+         * Returns the application context of the app.
+         */
         public Context getApplicationContext() {
             return overlay.getContext().getApplicationContext();
         }
@@ -126,7 +132,9 @@ public class GraphicOverlay extends View{
                         needUpdateTransformation = true);
     }
 
-    /** Removes all graphics from the overlay. */
+    /**
+     * Removes all graphics from the overlay.
+     */
     public void clear() {
         synchronized (lock) {
             graphics.clear();
@@ -134,14 +142,18 @@ public class GraphicOverlay extends View{
         postInvalidate();
     }
 
-    /** Adds a graphic to the overlay. */
+    /**
+     * Adds a graphic to the overlay.
+     */
     public void add(Graphic graphic) {
         synchronized (lock) {
             graphics.add(graphic);
         }
     }
 
-    /** Removes a graphic from the overlay. */
+    /**
+     * Removes a graphic from the overlay.
+     */
     public void remove(Graphic graphic) {
         synchronized (lock) {
             graphics.remove(graphic);
@@ -153,10 +165,10 @@ public class GraphicOverlay extends View{
      * Sets the source information of the image being processed by detectors, including size and
      * whether it is flipped, which informs how to transform image coordinates later.
      *
-     * @param imageWidth the width of the image sent to ML Kit detectors
+     * @param imageWidth  the width of the image sent to ML Kit detectors
      * @param imageHeight the height of the image sent to ML Kit detectors
-     * @param isFlipped whether the image is flipped. Should set it to true when the image is from the
-     *     front camera.
+     * @param isFlipped   whether the image is flipped. Should set it to true when the image is from the
+     *                    front camera.
      */
     public void setImageSourceInfo(int imageWidth, int imageHeight, boolean isFlipped) {
         Preconditions.checkState(imageWidth > 0, "image width must be positive");
@@ -207,7 +219,9 @@ public class GraphicOverlay extends View{
         needUpdateTransformation = false;
     }
 
-    /** Draws the overlay with its associated graphic objects. */
+    /**
+     * Draws the overlay with its associated graphic objects.
+     */
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);

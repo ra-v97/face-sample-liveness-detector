@@ -1,4 +1,4 @@
-package pl.edu.agh.facelivenessdetection.camera;
+package pl.edu.agh.facelivenessdetection.processing;
 
 import android.app.ActivityManager;
 import android.content.Context;
@@ -23,8 +23,13 @@ import java.nio.ByteBuffer;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import pl.edu.agh.facelivenessdetection.controller.ScopedExecutor;
+import pl.edu.agh.facelivenessdetection.utils.BitmapUtils;
+import pl.edu.agh.facelivenessdetection.model.FrameMetadata;
+import pl.edu.agh.facelivenessdetection.visualisation.drawer.CameraImageGraphic;
+import pl.edu.agh.facelivenessdetection.multithreading.ScopedExecutor;
 import pl.edu.agh.facelivenessdetection.preference.PreferenceUtils;
+import pl.edu.agh.facelivenessdetection.visualisation.GraphicOverlay;
+import pl.edu.agh.facelivenessdetection.visualisation.drawer.InferenceInfoGraphic;
 
 public abstract class VisionProcessorBase<T> implements VisionImageProcessor {
 
@@ -156,11 +161,9 @@ public abstract class VisionProcessorBase<T> implements VisionImageProcessor {
     }
 
     // -----------------Common processing logic-------------------------------------------------------
-    private Task<T> requestDetectInImage(
-            final InputImage image,
-            final GraphicOverlay graphicOverlay,
-            @Nullable final Bitmap originalCameraImage,
-            boolean shouldShowFps) {
+    private Task<T> requestDetectInImage(final InputImage image, final GraphicOverlay graphicOverlay,
+                                         @Nullable final Bitmap originalCameraImage,
+                                         boolean shouldShowFps) {
         final long startMs = SystemClock.elapsedRealtime();
         return detectInImage(image)
                 .addOnSuccessListener(
