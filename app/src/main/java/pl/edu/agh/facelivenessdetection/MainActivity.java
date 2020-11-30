@@ -3,7 +3,6 @@ package pl.edu.agh.facelivenessdetection;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.camera.camera2.interop.Camera2Interop;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.Preview;
@@ -12,12 +11,10 @@ import androidx.camera.view.PreviewView;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
 
-import android.hardware.camera2.CaptureRequest;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Message;
 import android.util.Log;
-import android.util.Range;
 import android.util.Size;
 import android.view.Surface;
 import android.view.View;
@@ -51,6 +48,9 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
      *  Constants definition
      */
     private static final String TAG = "LivePreviewMainActivity";
+
+    // Change this value if camera preview is rotated.
+    private static final int CAMERA_PREVIEW_ROTATION = Surface.ROTATION_90;
 
     /*
      * UI Elements
@@ -273,6 +273,7 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
         if (targetResolution != null) {
             builder.setTargetResolution(targetResolution);
         }
+
         previewUseCase = builder.build();
         previewUseCase.setSurfaceProvider(previewView.getSurfaceProvider());
         cameraProvider.bindToLifecycle(this, cameraSelector, previewUseCase);
@@ -302,15 +303,15 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
 
         faceLivenessDetectionController.obtainVisionProcessor(this).ifPresent(processor -> {
             imageProcessor = processor;
+
             final ImageAnalysis.Builder builder = new ImageAnalysis.Builder();
             final Size targetResolution = PreferenceUtils.getCameraXTargetResolution(this);
             if (targetResolution != null) {
                 builder.setTargetResolution(targetResolution);
             }
             if (isEmulator()) {
-                builder.setTargetRotation(Surface.ROTATION_270);
+                builder.setTargetRotation(CAMERA_PREVIEW_ROTATION);
             }
-
             analysisUseCase = builder.build();
 
             needUpdateGraphicOverlayImageSourceInfo = true;
