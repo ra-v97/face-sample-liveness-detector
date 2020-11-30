@@ -92,48 +92,6 @@ public abstract class VisionProcessorBase<T> implements VisionImageProcessor {
                 /* shouldShowFps= */ false);
     }
 
-    // -----------------Code for processing live preview frame from Camera1 API-----------------------
-    @Override
-    public synchronized void processByteBuffer(
-            ByteBuffer data, final FrameMetadata frameMetadata, final GraphicOverlay graphicOverlay) {
-        latestImage = data;
-        latestImageMetaData = frameMetadata;
-        if (processingImage == null && processingMetaData == null) {
-            processLatestImage(graphicOverlay);
-        }
-    }
-
-    private synchronized void processLatestImage(final GraphicOverlay graphicOverlay) {
-        processingImage = latestImage;
-        processingMetaData = latestImageMetaData;
-        latestImage = null;
-        latestImageMetaData = null;
-        if (processingImage != null && processingMetaData != null && !isShutdown) {
-            processImage(processingImage, processingMetaData, graphicOverlay);
-        }
-    }
-
-    private void processImage(
-            ByteBuffer data, final FrameMetadata frameMetadata, final GraphicOverlay graphicOverlay) {
-        // If live viewport is on (that is the underneath surface view takes care of the camera preview
-        // drawing), skip the unnecessary bitmap creation that used for the manual preview drawing.
-        Bitmap bitmap =
-                PreferenceUtils.isCameraLiveViewportEnabled(graphicOverlay.getContext())
-                        ? null
-                        : BitmapUtils.getBitmap(data, frameMetadata);
-
-        requestDetectInImage(
-                InputImage.fromByteBuffer(
-                        data,
-                        frameMetadata.getWidth(),
-                        frameMetadata.getHeight(),
-                        frameMetadata.getRotation(),
-                        InputImage.IMAGE_FORMAT_NV21),
-                graphicOverlay,
-                bitmap,
-                /* shouldShowFps= */ true)
-                .addOnSuccessListener(executor, results -> processLatestImage(graphicOverlay));
-    }
 
     // -----------------Code for processing live preview frame from CameraX API-----------------------
     @Override

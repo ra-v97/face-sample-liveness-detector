@@ -38,7 +38,7 @@ public class FaceLivenessDetectionController {
 
     public Optional<VisionImageProcessor> obtainVisionProcessor(MainActivity activity) {
         if (activeFaceProcessorMethod.get() == null) {
-            System.out.println("1");
+            Log.d(TAG, "1");
 
             return Optional.empty();
         }
@@ -46,7 +46,7 @@ public class FaceLivenessDetectionController {
             System.out.println("2");
             switch (activeFaceProcessorMethod.get()) {
                 case FACE_ACTIVITY_METHOD:
-                    System.out.println("3");
+                    Log.d(TAG, "3");
                     Log.i(TAG, "Using FaceActivityLivenessDetector");
                     final FaceActivityLivenessDetector faceActivityLivenessDetector =
                             new FaceActivityLivenessDetector(activity,
@@ -55,7 +55,7 @@ public class FaceLivenessDetectionController {
                     return Optional.of(faceActivityLivenessDetector);
 
                 case FACE_FLASHING_METHOD:
-                    System.out.println("4");
+                    Log.d(TAG, "4");
                     Log.i(TAG, "Using FaceFlashingLivenessDetector");
                     final FaceFlashingLivenessDetector faceFlashingLivenessDetector =
                             new FaceFlashingLivenessDetector(activity,
@@ -66,7 +66,7 @@ public class FaceLivenessDetectionController {
                     throw new IllegalStateException("Invalid model name");
             }
         } catch (Exception e) {
-            System.out.println("5");
+            Log.d(TAG, "5");
             Log.e(TAG, "Can not create image processor: " + activeFaceProcessorMethod.get(), e);
             activity.showToast("Can not create image processor: " + e.getLocalizedMessage());
             return Optional.empty();

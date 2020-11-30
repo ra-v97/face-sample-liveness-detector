@@ -3,6 +3,7 @@ package pl.edu.agh.facelivenessdetection;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.camera.camera2.interop.Camera2Interop;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.Preview;
@@ -11,11 +12,14 @@ import androidx.camera.view.PreviewView;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
 
+import android.hardware.camera2.CaptureRequest;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Message;
 import android.util.Log;
+import android.util.Range;
 import android.util.Size;
+import android.view.Surface;
 import android.view.View;
 import android.widget.RadioButton;
 import android.widget.TextView;
@@ -158,7 +162,7 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
         refreshFaceDetectionMethod(method2RadioButton);
     }
 
-    private void setActiveFaceDetectionMethod(AuthWithFaceLivenessDetectMethodType activeFaceDetectionMethod){
+    private void setActiveFaceDetectionMethod(AuthWithFaceLivenessDetectMethodType activeFaceDetectionMethod) {
         faceLivenessDetectionController
                 .setFaceProcessorMethod(activeFaceDetectionMethod);
         Optional.ofNullable(faceLivenessDetectorRadioButtonBiMap.get(activeFaceDetectionMethod))
@@ -274,6 +278,17 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
         cameraProvider.bindToLifecycle(this, cameraSelector, previewUseCase);
     }
 
+    private boolean isEmulator() {
+        return Build.FINGERPRINT.startsWith("generic")
+                || Build.FINGERPRINT.startsWith("unknown")
+                || Build.MODEL.contains("google_sdk")
+                || Build.MODEL.contains("Emulator")
+                || Build.MODEL.contains("Android SDK built for x86")
+                || Build.MODEL.contains("sdk_gphone")
+                || "google_sdk".equals(Build.PRODUCT);
+    }
+
+
     private void bindAnalysisUseCase() {
         if (cameraProvider == null) {
             return;
@@ -292,6 +307,10 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
             if (targetResolution != null) {
                 builder.setTargetResolution(targetResolution);
             }
+            if (isEmulator()) {
+                builder.setTargetRotation(Surface.ROTATION_270);
+            }
+
             analysisUseCase = builder.build();
 
             needUpdateGraphicOverlayImageSourceInfo = true;
