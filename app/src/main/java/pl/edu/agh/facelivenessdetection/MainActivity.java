@@ -212,7 +212,7 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
 
     @Override
     public void showToast(final String text) {
-        runOnUiThread(() -> Toast.makeText(MainActivity.this, text, Toast.LENGTH_SHORT).show());
+        runOnUiThread(() -> Toast.makeText(MainActivity.this, text, Toast.LENGTH_LONG).show());
     }
 
     @Override
