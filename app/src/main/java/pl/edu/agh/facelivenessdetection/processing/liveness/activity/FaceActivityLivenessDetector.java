@@ -41,13 +41,7 @@ public class FaceActivityLivenessDetector extends VisionProcessorBase<List<Face>
     public FaceActivityLivenessDetector(Context context, FaceDetectorOptions options) {
         super(context);
         Log.v(MANUAL_TESTING_LOG, "Face detector options: " + options);
-        FaceDetectorOptions.Builder optionsBuilder =
-                new FaceDetectorOptions.Builder()
-                        .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_ALL)
-                        .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST);
-
-        detector = FaceDetection.getClient(optionsBuilder.build());
-//        detector = FaceDetection.getClient(options);
+        detector = FaceDetection.getClient(options);
     }
 
     @Override

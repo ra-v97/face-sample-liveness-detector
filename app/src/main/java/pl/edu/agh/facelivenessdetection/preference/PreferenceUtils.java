@@ -43,12 +43,12 @@ public class PreferenceUtils {
                 getModeTypePreferenceValue(
                         context,
                         R.string.pref_key_live_preview_face_detection_contour_mode,
-                        FaceDetectorOptions.CONTOUR_MODE_ALL);
+                        FaceDetectorOptions.CONTOUR_MODE_NONE);
         int classificationMode =
                 getModeTypePreferenceValue(
                         context,
                         R.string.pref_key_live_preview_face_detection_classification_mode,
-                        FaceDetectorOptions.CLASSIFICATION_MODE_NONE);
+                        FaceDetectorOptions.CLASSIFICATION_MODE_ALL);
         int performanceMode =
                 getModeTypePreferenceValue(
                         context,
