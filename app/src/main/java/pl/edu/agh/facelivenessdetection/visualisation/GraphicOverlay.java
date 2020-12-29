@@ -7,6 +7,7 @@ import android.util.AttributeSet;
 import android.view.View;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +33,7 @@ import java.util.List;
  */
 public class GraphicOverlay extends View {
     private final Object lock = new Object();
-    private final List<Graphic> graphics = new ArrayList<>();
+    private final List<Graphic> graphics = Lists.newArrayList();
     // Matrix for transforming from image coordinates to overlay view coordinates.
     private final Matrix transformationMatrix = new Matrix();
 

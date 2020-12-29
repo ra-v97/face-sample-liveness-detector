@@ -1,4 +1,4 @@
-package pl.edu.agh.facelivenessdetection.processing.liveness.flashing;
+package pl.edu.agh.facelivenessdetection.processing;
 
 import android.graphics.Rect;
 import android.util.Log;
@@ -17,16 +17,23 @@ import pl.edu.agh.facelivenessdetection.visualisation.DetectionVisualizer;
 import pl.edu.agh.facelivenessdetection.visualisation.GraphicOverlay;
 import pl.edu.agh.facelivenessdetection.visualisation.drawer.FaceGraphic;
 
-public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<List<Face>> {
+public class DummyFaceDetectionProcessor extends BaseImageAnalyzer<List<Face>> {
 
-    private static final String TAG = "FaceDetectorProcessor";
+    public static final String TAG = "DummyFaceDetectionProcessor";
+
+    private final FaceDetectorOptions realTimeOpts;
 
     private final FaceDetector detector;
 
-    public FaceFlashingLivenessDetector(GraphicOverlay overlay, FaceDetectorOptions options) {
-        super(overlay);
-        Log.v(TAG, "Face detector options: " + options);
-        detector = FaceDetection.getClient(options);
+    public DummyFaceDetectionProcessor(GraphicOverlay view) {
+        super(view);
+
+        realTimeOpts = new FaceDetectorOptions.Builder()
+                .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
+                .setContourMode(FaceDetectorOptions.CONTOUR_MODE_ALL)
+                .build();
+
+        detector = FaceDetection.getClient(realTimeOpts);
     }
 
     @Override

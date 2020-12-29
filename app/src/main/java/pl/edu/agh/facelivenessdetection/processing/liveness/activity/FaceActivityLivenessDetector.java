@@ -91,9 +91,4 @@ public class FaceActivityLivenessDetector extends VisionProcessorBase<List<Face>
         livenessDetector = new LivenessDetector(visualizer);
         detectionVisualizer = visualizer;
     }
-
-    @Override
-    public void terminate() {
-        Log.i(TAG, "FaceActivityLivenessDetector face liveness detection terminated");
-    }
 }

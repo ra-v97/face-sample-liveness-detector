@@ -23,7 +23,6 @@ import java.nio.ByteBuffer;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import pl.edu.agh.facelivenessdetection.processing.VisionImageProcessor;
 import pl.edu.agh.facelivenessdetection.utils.BitmapUtils;
 import pl.edu.agh.facelivenessdetection.model.FrameMetadata;
 import pl.edu.agh.facelivenessdetection.visualisation.drawer.CameraImageGraphic;
@@ -32,7 +31,7 @@ import pl.edu.agh.facelivenessdetection.preference.PreferenceUtils;
 import pl.edu.agh.facelivenessdetection.visualisation.GraphicOverlay;
 import pl.edu.agh.facelivenessdetection.visualisation.drawer.InferenceInfoGraphic;
 
-public abstract class VisionProcessorBase<T> implements VisionImageProcessor {
+public abstract class VisionProcessorBase<T>  {
 
     protected static final String MANUAL_TESTING_LOG = "LogTagForTest";
     private static final String TAG = "VisionProcessorBase";
@@ -83,7 +82,6 @@ public abstract class VisionProcessorBase<T> implements VisionImageProcessor {
     }
 
     // -----------------Code for processing single still image----------------------------------------
-    @Override
     public void processBitmap(Bitmap bitmap, final GraphicOverlay graphicOverlay) {
         requestDetectInImage(
                 InputImage.fromBitmap(bitmap, 0),
@@ -94,7 +92,6 @@ public abstract class VisionProcessorBase<T> implements VisionImageProcessor {
 
 
     // -----------------Code for processing live preview frame from CameraX API-----------------------
-    @Override
     @RequiresApi(Build.VERSION_CODES.KITKAT)
     @ExperimentalGetImage
     public void processImageProxy(ImageProxy image, GraphicOverlay graphicOverlay) {
@@ -174,7 +171,6 @@ public abstract class VisionProcessorBase<T> implements VisionImageProcessor {
                         });
     }
 
-    @Override
     public void stop() {
         executor.shutdown();
         isShutdown = true;
