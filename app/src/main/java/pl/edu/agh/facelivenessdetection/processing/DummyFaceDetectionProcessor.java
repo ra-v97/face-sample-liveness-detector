@@ -25,8 +25,8 @@ public class DummyFaceDetectionProcessor extends BaseImageAnalyzer<List<Face>> {
 
     private final FaceDetector detector;
 
-    public DummyFaceDetectionProcessor(GraphicOverlay view) {
-        super(view);
+    public DummyFaceDetectionProcessor(GraphicOverlay view, boolean isHorizontalMode) {
+        super(view, isHorizontalMode);
 
         realTimeOpts = new FaceDetectorOptions.Builder()
                 .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)

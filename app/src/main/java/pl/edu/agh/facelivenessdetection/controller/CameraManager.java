@@ -8,6 +8,7 @@ import android.util.Log;
 import android.util.Size;
 import android.view.ScaleGestureDetector;
 import android.view.Surface;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.camera.core.Camera;
@@ -25,6 +26,7 @@ import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.LiveData;
 
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.mlkit.common.MlKitException;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -98,7 +100,7 @@ public class CameraManager {
         this.previewView = previewView;
         this.lifecycleOwner = lifecycleOwner;
         this.graphicOverlay = graphicOverlay;
-        previewView.setRotation(isEmulator() ? CAMERA_PREVIEW_ROTATION : DEFAULT_PREVIEW_ROTATION);
+
         createCameraExecutor();
     }
 
@@ -117,12 +119,13 @@ public class CameraManager {
 //                    final FaceActivityLivenessDetector faceActivityLivenessDetector =
 //                            new FaceActivityLivenessDetector(activity,
 //                                    PreferenceUtils.getFaceDetectorOptionsForLivePreview(activity));
-                    activeLivenessAnalyzer = new DummyFaceDetectionProcessor(graphicOverlay);
+                    activeLivenessAnalyzer = new DummyFaceDetectionProcessor(graphicOverlay, isHorizontalMode());
                     return Optional.of(activeLivenessAnalyzer);
 
                 case FACE_FLASHING_METHOD:
                     Log.i(TAG, "Using FaceFlashingLivenessDetector");
                     activeLivenessAnalyzer = new FaceFlashingLivenessDetector(graphicOverlay,
+                            isHorizontalMode(),
                             PreferenceUtils.getFaceDetectorOptionsForLivePreview(context));
                     return Optional.of(activeLivenessAnalyzer);
                 default:
@@ -197,6 +200,9 @@ public class CameraManager {
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                         .setTargetRotation(isEmulator() ? CAMERA_ANALYZER_ROTATION : DEFAULT_ANALYZER_ROTATION)
                         .build();
+
+                previewView.setRotation(isEmulator() ? CAMERA_PREVIEW_ROTATION : DEFAULT_PREVIEW_ROTATION);
+
                 resolveAnalyzer()
                         .ifPresent(analyzer -> imageAnalyzer.setAnalyzer(Objects.requireNonNull(cameraExecutor), analyzer));
 
@@ -210,6 +216,7 @@ public class CameraManager {
                 imageCapture = new ImageCapture.Builder()
                         .setTargetResolution(new Size(displayMetrics.widthPixels, displayMetrics.heightPixels))
                         .build();
+
                 setUpPinchToZoom();
                 setCameraConfig(cameraProvider, cameraSelector);
             } catch (ExecutionException | InterruptedException e) {

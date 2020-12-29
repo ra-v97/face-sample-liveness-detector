@@ -23,8 +23,9 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<List<Face>> 
 
     private final FaceDetector detector;
 
-    public FaceFlashingLivenessDetector(GraphicOverlay overlay, FaceDetectorOptions options) {
-        super(overlay);
+    public FaceFlashingLivenessDetector(GraphicOverlay overlay, boolean isHorizontalMode,
+                                        FaceDetectorOptions options) {
+        super(overlay, isHorizontalMode);
         Log.v(TAG, "Face detector options: " + options);
         detector = FaceDetection.getClient(options);
     }
