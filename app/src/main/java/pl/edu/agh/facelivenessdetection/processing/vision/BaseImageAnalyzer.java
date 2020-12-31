@@ -1,6 +1,8 @@
 package pl.edu.agh.facelivenessdetection.processing.vision;
 
 import android.annotation.SuppressLint;
+import android.app.ActivityManager;
+import android.content.Context;
 import android.graphics.Rect;
 import android.media.Image;
 
@@ -15,9 +17,13 @@ import java.util.Optional;
 
 import pl.edu.agh.facelivenessdetection.preference.SharedPreferences;
 import pl.edu.agh.facelivenessdetection.processing.FaceLivenessDetector;
+import pl.edu.agh.facelivenessdetection.processing.ProcessingMonitor;
 import pl.edu.agh.facelivenessdetection.visualisation.GraphicOverlay;
+import pl.edu.agh.facelivenessdetection.visualisation.drawer.InferenceInfoGraphic;
 
 public abstract class BaseImageAnalyzer<T> implements ImageAnalysis.Analyzer, FaceLivenessDetector {
+
+    private final ProcessingMonitor monitor;
 
     private final GraphicOverlay graphicOverlay;
 
@@ -25,10 +31,12 @@ public abstract class BaseImageAnalyzer<T> implements ImageAnalysis.Analyzer, Fa
 
     private final boolean isHorizontalMode;
 
-    public BaseImageAnalyzer(GraphicOverlay graphicOverlay, boolean isHorizontalMode) {
+    public BaseImageAnalyzer(Context context, GraphicOverlay graphicOverlay, boolean isHorizontalMode) {
         this.graphicOverlay = graphicOverlay;
         this.isOverlayInitialized = false;
         this.isHorizontalMode = isHorizontalMode;
+        this.monitor = new ProcessingMonitor((ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE));
+        this.monitor.startTimer();
     }
 
     @SuppressLint("UnsafeExperimentalUsageError")
@@ -38,8 +46,14 @@ public abstract class BaseImageAnalyzer<T> implements ImageAnalysis.Analyzer, Fa
         final Image mediaImage = imageProxy.getImage();
         Optional.ofNullable(mediaImage)
                 .ifPresent(img -> {
+                    monitor.notifyDetectionStart();
                     final Task<T> tTask = detectInImage(InputImage.fromMediaImage(img, imageProxy.getImageInfo().getRotationDegrees()));
-                    tTask.addOnSuccessListener(result -> onSuccess(result, graphicOverlay, img.getCropRect()));
+                    tTask.addOnSuccessListener(result -> {
+                        onSuccess(result, graphicOverlay);
+                        graphicOverlay.add(new InferenceInfoGraphic(graphicOverlay,
+                                monitor.getAverageLatency(), monitor.getFPSRate()));
+                        monitor.notifyDetectionCompleted();
+                    });
                     tTask.addOnFailureListener(e -> {
                         graphicOverlay.clear();
                         graphicOverlay.postInvalidate();
@@ -67,11 +81,13 @@ public abstract class BaseImageAnalyzer<T> implements ImageAnalysis.Analyzer, Fa
         return graphicOverlay;
     }
 
-    public abstract void stop();
+    public void stop() {
+        monitor.stopTimer();
+    }
 
     protected abstract Task<T> detectInImage(InputImage image);
 
-    protected abstract void onSuccess(T result, GraphicOverlay graphicOverlay, Rect rect);
+    protected abstract void onSuccess(T result, GraphicOverlay graphicOverlay);
 
     protected abstract void onFailure(Exception e);
 }

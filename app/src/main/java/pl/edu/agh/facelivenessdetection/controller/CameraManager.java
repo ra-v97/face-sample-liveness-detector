@@ -8,13 +8,11 @@ import android.util.Log;
 import android.util.Size;
 import android.view.ScaleGestureDetector;
 import android.view.Surface;
-import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.camera.core.Camera;
 import androidx.camera.core.CameraInfo;
 import androidx.camera.core.CameraSelector;
-import androidx.camera.core.CameraX;
 import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.ImageCapture;
 import androidx.camera.core.Preview;
@@ -26,22 +24,16 @@ import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.LiveData;
 
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.mlkit.common.MlKitException;
 
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicReference;
 
-import pl.edu.agh.facelivenessdetection.MainActivity;
 import pl.edu.agh.facelivenessdetection.preference.PreferenceUtils;
 import pl.edu.agh.facelivenessdetection.preference.SharedPreferences;
 import pl.edu.agh.facelivenessdetection.processing.AuthWithFaceLivenessDetectMethodType;
-import pl.edu.agh.facelivenessdetection.processing.DummyFaceDetectionProcessor;
-import pl.edu.agh.facelivenessdetection.processing.FaceLivenessDetector;
 import pl.edu.agh.facelivenessdetection.processing.liveness.activity.FaceActivityLivenessDetector;
 import pl.edu.agh.facelivenessdetection.processing.liveness.flashing.FaceFlashingLivenessDetector;
 import pl.edu.agh.facelivenessdetection.processing.vision.BaseImageAnalyzer;
@@ -105,7 +97,7 @@ public class CameraManager {
     }
 
     private void createCameraExecutor() {
-        cameraExecutor = Executors.newSingleThreadExecutor();
+        cameraExecutor = Executors.newFixedThreadPool(2);
     }
 
     public Optional<ImageAnalysis.Analyzer> resolveAnalyzer() {
@@ -116,15 +108,16 @@ public class CameraManager {
             switch (activeAnalyzerType) {
                 case FACE_ACTIVITY_METHOD:
                     Log.i(TAG, "Using FaceActivityLivenessDetector");
-//                    final FaceActivityLivenessDetector faceActivityLivenessDetector =
-//                            new FaceActivityLivenessDetector(activity,
-//                                    PreferenceUtils.getFaceDetectorOptionsForLivePreview(activity));
-                    activeLivenessAnalyzer = new DummyFaceDetectionProcessor(graphicOverlay, isHorizontalMode());
+                    activeLivenessAnalyzer = new FaceActivityLivenessDetector(context,
+                            graphicOverlay,
+                            isHorizontalMode(),
+                            PreferenceUtils.getFaceDetectorOptionsForLivePreview(context));
                     return Optional.of(activeLivenessAnalyzer);
 
                 case FACE_FLASHING_METHOD:
                     Log.i(TAG, "Using FaceFlashingLivenessDetector");
-                    activeLivenessAnalyzer = new FaceFlashingLivenessDetector(graphicOverlay,
+                    activeLivenessAnalyzer = new FaceFlashingLivenessDetector(context,
+                            graphicOverlay,
                             isHorizontalMode(),
                             PreferenceUtils.getFaceDetectorOptionsForLivePreview(context));
                     return Optional.of(activeLivenessAnalyzer);
@@ -181,9 +174,7 @@ public class CameraManager {
                 };
         final ScaleGestureDetector scaleGestureDetector = new ScaleGestureDetector(context, listener);
         previewView.setOnTouchListener((v, event) -> {
-            previewView.post(() -> {
-                scaleGestureDetector.onTouchEvent(event);
-            });
+            previewView.post(() -> scaleGestureDetector.onTouchEvent(event));
             return true;
         });
     }
@@ -201,7 +192,7 @@ public class CameraManager {
                         .setTargetRotation(isEmulator() ? CAMERA_ANALYZER_ROTATION : DEFAULT_ANALYZER_ROTATION)
                         .build();
 
-                previewView.setRotation(isEmulator() ? CAMERA_PREVIEW_ROTATION : DEFAULT_PREVIEW_ROTATION);
+                //previewView.setRotation(isEmulator() ? CAMERA_PREVIEW_ROTATION : DEFAULT_PREVIEW_ROTATION);
 
                 resolveAnalyzer()
                         .ifPresent(analyzer -> imageAnalyzer.setAnalyzer(Objects.requireNonNull(cameraExecutor), analyzer));

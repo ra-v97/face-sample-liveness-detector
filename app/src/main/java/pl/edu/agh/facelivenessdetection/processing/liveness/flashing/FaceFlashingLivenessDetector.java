@@ -1,5 +1,6 @@
 package pl.edu.agh.facelivenessdetection.processing.liveness.flashing;
 
+import android.content.Context;
 import android.graphics.Rect;
 import android.util.Log;
 
@@ -23,9 +24,9 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<List<Face>> 
 
     private final FaceDetector detector;
 
-    public FaceFlashingLivenessDetector(GraphicOverlay overlay, boolean isHorizontalMode,
+    public FaceFlashingLivenessDetector(Context context, GraphicOverlay overlay, boolean isHorizontalMode,
                                         FaceDetectorOptions options) {
-        super(overlay, isHorizontalMode);
+        super(context, overlay, isHorizontalMode);
         Log.v(TAG, "Face detector options: " + options);
         detector = FaceDetection.getClient(options);
     }
@@ -37,6 +38,7 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<List<Face>> 
 
     @Override
     public void stop() {
+        super.stop();
         try {
             detector.close();
         } catch (Exception e) {
@@ -50,7 +52,7 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<List<Face>> 
     }
 
     @Override
-    protected void onSuccess(List<Face> result, GraphicOverlay graphicOverlay, Rect rect) {
+    protected void onSuccess(List<Face> result, GraphicOverlay graphicOverlay) {
         graphicOverlay.clear();
         result.forEach(res -> {
             // TODO Check rect param
