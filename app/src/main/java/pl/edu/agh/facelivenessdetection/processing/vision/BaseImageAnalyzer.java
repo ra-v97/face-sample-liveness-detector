@@ -9,6 +9,7 @@ import android.media.Image;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.ImageProxy;
+import androidx.preference.PreferenceManager;
 
 import com.google.android.gms.tasks.Task;
 import com.google.mlkit.vision.common.InputImage;
@@ -23,6 +24,8 @@ import pl.edu.agh.facelivenessdetection.visualisation.drawer.InferenceInfoGraphi
 
 public abstract class BaseImageAnalyzer<T> implements ImageAnalysis.Analyzer, FaceLivenessDetector {
 
+    private final Context context;
+
     private final ProcessingMonitor monitor;
 
     private final GraphicOverlay graphicOverlay;
@@ -33,6 +36,7 @@ public abstract class BaseImageAnalyzer<T> implements ImageAnalysis.Analyzer, Fa
 
     public BaseImageAnalyzer(Context context, GraphicOverlay graphicOverlay, boolean isHorizontalMode) {
         this.graphicOverlay = graphicOverlay;
+        this.context = context;
         this.isOverlayInitialized = false;
         this.isHorizontalMode = isHorizontalMode;
         this.monitor = new ProcessingMonitor((ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE));
@@ -79,6 +83,11 @@ public abstract class BaseImageAnalyzer<T> implements ImageAnalysis.Analyzer, Fa
 
     protected GraphicOverlay getGraphicOverlay() {
         return graphicOverlay;
+    }
+
+    protected String resolveActiveTag() {
+        final android.content.SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getString("logging_tag", null);
     }
 
     public void stop() {

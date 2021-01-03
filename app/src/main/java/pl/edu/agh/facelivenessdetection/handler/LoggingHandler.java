@@ -23,7 +23,7 @@ public class LoggingHandler extends Handler {
     public void handleMessage(Message msg) {
         final MainActivity activity = mainActivityReference.get();
 
-        Optional.ofNullable(msg.getData().getString(CLEAR_KEY))
+        Optional.ofNullable(msg.getData().getBoolean(CLEAR_KEY))
                 .ifPresent(status -> activity.clearLogger());
 
         Optional.ofNullable(msg.getData().getString(LOG_MESSAGE_KEY))

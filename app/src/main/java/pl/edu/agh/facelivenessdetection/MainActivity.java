@@ -32,6 +32,8 @@ import java.util.Objects;
 
 import pl.edu.agh.facelivenessdetection.controller.CameraManager;
 import pl.edu.agh.facelivenessdetection.handler.LoggingHandler;
+import pl.edu.agh.facelivenessdetection.persistence.ActivityDetectionStatus;
+import pl.edu.agh.facelivenessdetection.persistence.PersistenceManager;
 import pl.edu.agh.facelivenessdetection.processing.AuthWithFaceLivenessDetectMethodType;
 import pl.edu.agh.facelivenessdetection.utils.PermissionManager;
 import pl.edu.agh.facelivenessdetection.visualisation.GraphicOverlay;
@@ -67,6 +69,9 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
     @Nullable
     private CameraManager cameraManager;
 
+    @Nullable
+    private PersistenceManager persistenceManager;
+
     public MainActivity() {
         statusChangeHandler = new StatusChangeHandler(this);
         loggingHandler = new LoggingHandler(this);
@@ -98,6 +103,7 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
         }
 
         createCameraManager();
+        createPersistenceManager();
         setUpViewModelProvider();
     }
 
@@ -124,6 +130,10 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
         cameraManager = new CameraManager(this, previewView, this, graphicOverlay);
     }
 
+    private void createPersistenceManager(){
+        persistenceManager = new PersistenceManager(this);
+    }
+
     private void setUpViewModelProvider() {
         if (PermissionManager.allPermissionsGranted(this) && cameraManager != null) {
             setActiveFaceDetectionMethod(loadActiveMethodFromPreferences());
@@ -132,6 +142,7 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
     }
 
     public void onDetectButtonClick(View view) {
+        persistenceManager.writeFileOnInternalStorage(new ActivityDetectionStatus());
         clearInfo();
         Objects.requireNonNull(cameraManager).performFaceLivenessDetectionTrigger(this);
     }

@@ -22,7 +22,7 @@ import pl.edu.agh.facelivenessdetection.visualisation.drawer.FaceGraphic;
 
 public class FaceActivityLivenessDetector extends BaseImageAnalyzer<List<Face>> {
 
-    public static final String TAG = "DummyFaceDetectionProcessor";
+    public static final String TAG = "FaceActivityLivenessDetector";
 
     private final FaceDetector detector;
 

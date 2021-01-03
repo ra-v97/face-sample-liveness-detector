@@ -1,9 +1,9 @@
 package pl.edu.agh.facelivenessdetection.processing.liveness.activity;
 
-enum PossibleActivity {
+public enum PossibleActivity {
     TURN_HEAD_LEFT, TURN_HEAD_RIGHT, SMILE, BLINK;
 
-    static String name(PossibleActivity activity) {
+    public static String name(PossibleActivity activity) {
         switch (activity){
             case BLINK: return "blink";
             case TURN_HEAD_LEFT: return "turn head left";
