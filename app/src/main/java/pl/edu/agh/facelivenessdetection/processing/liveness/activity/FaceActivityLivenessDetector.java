@@ -52,7 +52,8 @@ public class FaceActivityLivenessDetector extends BaseImageAnalyzer<List<Face>> 
     }
 
     @Override
-    protected void onSuccess(List<Face> result, GraphicOverlay graphicOverlay) {
+    protected void onSuccess(List<Face> result) {
+        final GraphicOverlay graphicOverlay = getGraphicOverlay();
         graphicOverlay.clear();
         for (Face face : result) {
             graphicOverlay.add(new FaceGraphic(graphicOverlay, face));

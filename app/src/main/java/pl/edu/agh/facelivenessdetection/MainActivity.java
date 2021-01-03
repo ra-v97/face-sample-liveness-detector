@@ -5,22 +5,24 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.view.PreviewView;
+import androidx.preference.PreferenceManager;
 
+import android.annotation.SuppressLint;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Message;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
-import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.annotation.KeepName;
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
 
 import java.util.Objects;
-import java.util.Optional;
 
 import pl.edu.agh.facelivenessdetection.controller.CameraManager;
 import pl.edu.agh.facelivenessdetection.processing.AuthWithFaceLivenessDetectMethodType;
@@ -38,22 +40,12 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
      *  Constants definition
      */
     private static final String TAG = "LivePreviewMainActivity";
-    /*
-     * UI Elements
-     */
-    private RadioButton method1RadioButton;
-
-    private RadioButton method2RadioButton;
 
     private TextView livenessStatusTextView;
 
     private PreviewView previewView;
 
     private GraphicOverlay graphicOverlay;
-    /*
-     * Required elements
-     */
-    private final BiMap<AuthWithFaceLivenessDetectMethodType, RadioButton> faceLivenessDetectorRadioButtonBiMap;
 
     private final StatusChangeHandler statusChangeHandler;
 
@@ -61,8 +53,6 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
     private CameraManager cameraManager;
 
     public MainActivity() {
-        faceLivenessDetectorRadioButtonBiMap = HashBiMap.create();
-
         statusChangeHandler = new StatusChangeHandler(this);
     }
 
@@ -72,9 +62,7 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
 
         setContentView(R.layout.activity_main);
 
-        method1RadioButton = findViewById(R.id.radioButtonMethod1);
-        method2RadioButton = findViewById(R.id.radioButtonMethod2);
-        livenessStatusTextView = findViewById(R.id.statusView);
+       // livenessStatusTextView = findViewById(R.id.statusView);
 
         previewView = findViewById(R.id.preview_view);
         if (previewView == null) {
@@ -85,9 +73,7 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
             Log.d(TAG, "graphicOverlay is null");
         }
 
-        initializeViewElements();
         createCameraManager();
-        setActiveFaceDetectionMethod(Objects.requireNonNull(cameraManager).getActiveAnalyzerType());
         setUpViewModelProvider();
 
         if (!PermissionManager.allPermissionsGranted(this)) {
@@ -95,19 +81,32 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
         }
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main_menu, menu);
+        return true;
+    }
+
+    @SuppressLint("NonConstantResourceId")
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_settings:
+                final Intent settingsStartIntent = new Intent(MainActivity.this, SettingsActivity.class);
+                MainActivity.this.startActivity(settingsStartIntent);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
     private void createCameraManager() {
         cameraManager = new CameraManager(this, previewView, this, graphicOverlay);
     }
 
-    private void initializeViewElements() {
-        faceLivenessDetectorRadioButtonBiMap.put(AuthWithFaceLivenessDetectMethodType.FACE_ACTIVITY_METHOD,
-                method1RadioButton);
-        faceLivenessDetectorRadioButtonBiMap.put(AuthWithFaceLivenessDetectMethodType.FACE_FLASHING_METHOD,
-                method2RadioButton);
-    }
-
     private void setUpViewModelProvider() {
         if (PermissionManager.allPermissionsGranted(this) && cameraManager != null) {
+            setActiveFaceDetectionMethod(loadActiveMethodFromPreferences());
             cameraManager.startCamera();
         }
     }
@@ -116,28 +115,14 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
         Objects.requireNonNull(cameraManager).performFaceLivenessDetectionTrigger(this);
     }
 
-    public void onToggleMethod1(View view) {
-        refreshFaceDetectionMethod(method1RadioButton);
-    }
-
-    public void onToggleMethod2(View view) {
-        refreshFaceDetectionMethod(method2RadioButton);
-    }
-
     private void setActiveFaceDetectionMethod(AuthWithFaceLivenessDetectMethodType activeFaceDetectionMethod) {
-        refreshFaceDetectionMethod(activeFaceDetectionMethod);
-        Optional.ofNullable(faceLivenessDetectorRadioButtonBiMap.get(activeFaceDetectionMethod))
-                .ifPresent(RadioButton::toggle);
-    }
-
-    private void refreshFaceDetectionMethod(AuthWithFaceLivenessDetectMethodType activeFaceDetectionMethod) {
         Objects.requireNonNull(cameraManager).changeAnalyzer(activeFaceDetectionMethod);
     }
 
-    private void refreshFaceDetectionMethod(RadioButton methodRadioButton) {
-        refreshFaceDetectionMethod(faceLivenessDetectorRadioButtonBiMap.inverse()
-                .get(methodRadioButton));
-        setDetectionStatus(LivenessDetectionStatus.UNKNOWN);
+    private AuthWithFaceLivenessDetectMethodType loadActiveMethodFromPreferences() {
+        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        final String activeMethodStr = prefs.getString("active_method", "face_activity_method");
+        return AuthWithFaceLivenessDetectMethodType.fromString(activeMethodStr);
     }
 
     public void setDetectionStatus(LivenessDetectionStatus status) {
@@ -197,7 +182,6 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
             int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         Log.i(TAG, "Permission granted!");
         if (PermissionManager.allPermissionsGranted(this) && cameraManager != null) {
-
             cameraManager.startCamera();
         } else {
             Log.e(TAG, "Camera start error");

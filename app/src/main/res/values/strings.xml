@@ -19,4 +19,15 @@
     <string name="pref_key_live_preview_face_detection_face_tracking" translatable="false">lpfdft</string>
     <string name="pref_key_live_preview_face_detection_min_face_size" translatable="false">lpfdmfs</string>
     <string name="pref_key_camerax_target_resolution" translatable="false">ctas</string>
+    <string name="menu_settings">Settings</string>
+    <string name="title_activity_settings">SettingsActivity</string>
+
+    <string name="detection_method">Liveness detection method</string>
+    <string name="face_liveness_auto_check">Face liveness auto detection</string>
+    <string name="auto_check_timeout_title">Auto check timeout</string>
+    <string name="face_actions_number_label">Face actions number to verify</string>
+    <string name="verification_timeout_label">Livenes activity verification timeout</string>
+    <string name="log_file_name_label">Log file name</string>
+    <string name="logging_active_switch_label">Logging active</string>
+    <string name="logging_tag_label">Logging Tag</string>
 </resources>

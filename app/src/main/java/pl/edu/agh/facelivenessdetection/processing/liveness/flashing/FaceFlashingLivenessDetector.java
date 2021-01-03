@@ -52,7 +52,8 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<List<Face>> 
     }
 
     @Override
-    protected void onSuccess(List<Face> result, GraphicOverlay graphicOverlay) {
+    protected void onSuccess(List<Face> result) {
+        final GraphicOverlay graphicOverlay = getGraphicOverlay();
         graphicOverlay.clear();
         result.forEach(res -> {
             // TODO Check rect param

@@ -1,140 +1,107 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/textureView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_gravity="center"
-    tools:context=".MainActivity">
+    tools:context=".MainActivity">>
 
-    <RadioGroup
-        android:id="@+id/radioGroup"
-        android:layout_width="380dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:orientation="vertical"
-        app:layout_constraintBottom_toTopOf="@+id/constraintLayout"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <TextView
-            android:id="@+id/availableMethodsLabel"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/face_liveness_detection_methods_label"
-            android:textSize="18sp"
-            android:textStyle="bold" />
-
-        <RadioButton
-            android:id="@+id/radioButtonMethod1"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:onClick="onToggleMethod1"
-            android:text="@string/liveness_detection_method_1_name"
-            android:textSize="18sp" />
-
-        <RadioButton
-            android:id="@+id/radioButtonMethod2"
-            android:layout_width="match_parent"
-            android:layout_height="32dp"
-            android:onClick="onToggleMethod2"
-            android:text="@string/liveness_detection_method_2_name"
-            android:textSize="18sp" />
-
-    </RadioGroup>
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/constraintLayout"
-        android:layout_width="380dp"
-        android:layout_height="0dp"
-        android:orientation="horizontal"
-        app:layout_constraintBottom_toTopOf="@+id/linearLayout"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/radioGroup">
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
         <androidx.camera.view.PreviewView
             android:id="@+id/preview_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
-
-        </androidx.camera.view.PreviewView>
+            app:scaleType="fillCenter" />
 
         <pl.edu.agh.facelivenessdetection.visualisation.GraphicOverlay
             android:id="@+id/graphic_overlay"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            android:layout_height="match_parent" />
+    </FrameLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
+<!--<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"-->
+<!--    xmlns:app="http://schemas.android.com/apk/res-auto"-->
+<!--    xmlns:tools="http://schemas.android.com/tools"-->
+<!--    android:id="@+id/textureView"-->
+<!--    android:layout_width="match_parent"-->
+<!--    android:layout_height="match_parent"-->
+<!--    android:layout_gravity="center"-->
+<!--    tools:context=".MainActivity">-->
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+<!--    <pl.edu.agh.facelivenessdetection.visualisation.GraphicOverlay-->
+<!--        android:id="@+id/graphic_overlay"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        tools:layout_editor_absoluteX="16dp" />-->
 
-    <LinearLayout
-        android:id="@+id/linearLayout"
-        android:layout_width="380dp"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="24dp"
-        android:gravity="fill_horizontal"
-        android:orientation="horizontal"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/constraintLayout">
+<!--    <androidx.camera.view.PreviewView-->
+<!--        android:id="@+id/preview_view"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="match_parent"-->
+<!--        tools:layout_editor_absoluteX="31dp"-->
+<!--        tools:layout_editor_absoluteY="-102dp">-->
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+<!--    </androidx.camera.view.PreviewView>-->
 
-            <Button
-                android:id="@+id/button"
-                android:layout_width="152dp"
-                android:layout_height="64dp"
-                android:onClick="onDetectButtonClick"
-                android:text="@string/detect_button_label"
-                android:textSize="18sp" />
-        </LinearLayout>
+<!--    <LinearLayout-->
+<!--        android:id="@+id/linearLayout"-->
+<!--        android:layout_width="380dp"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:gravity="fill_horizontal|fill_vertical"-->
+<!--        android:orientation="horizontal"-->
+<!--        app:layout_constraintBottom_toBottomOf="parent"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintStart_toStartOf="parent">-->
 
-        <Space
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1" />
+<!--        <LinearLayout-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:orientation="vertical">-->
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:gravity="center"
-            android:orientation="vertical">
+<!--            <Button-->
+<!--                android:id="@+id/button"-->
+<!--                android:layout_width="152dp"-->
+<!--                android:layout_height="64dp"-->
+<!--                android:onClick="onDetectButtonClick"-->
+<!--                android:text="@string/detect_button_label"-->
+<!--                android:textSize="18sp" />-->
+<!--        </LinearLayout>-->
 
-            <TextView
-                android:id="@+id/textView2"
-                android:layout_width="144dp"
-                android:layout_height="40dp"
-                android:gravity="center"
-                android:text="@string/status_label"
-                android:textAlignment="center"
-                android:textSize="24sp" />
+<!--        <Space-->
+<!--            android:layout_width="0dp"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_weight="1" />-->
 
-            <TextView
-                android:id="@+id/statusView"
-                android:layout_width="144dp"
-                android:layout_height="40dp"
-                android:background="#FFEB3B"
-                android:gravity="center"
-                android:text="@string/unknown_status_label"
-                android:textAlignment="center"
-                android:textSize="24sp" />
-        </LinearLayout>
+<!--        <LinearLayout-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_gravity="center"-->
+<!--            android:gravity="center"-->
+<!--            android:orientation="vertical">-->
 
-    </LinearLayout>
+<!--            <TextView-->
+<!--                android:id="@+id/textView2"-->
+<!--                android:layout_width="144dp"-->
+<!--                android:layout_height="40dp"-->
+<!--                android:gravity="center"-->
+<!--                android:text="@string/status_label"-->
+<!--                android:textAlignment="center"-->
+<!--                android:textSize="24sp" />-->
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+<!--            <TextView-->
+<!--                android:id="@+id/statusView"-->
+<!--                android:layout_width="144dp"-->
+<!--                android:layout_height="40dp"-->
+<!--                android:background="#FFEB3B"-->
+<!--                android:gravity="center"-->
+<!--                android:text="@string/unknown_status_label"-->
+<!--                android:textAlignment="center"-->
+<!--                android:textSize="24sp" />-->
+<!--        </LinearLayout>-->
+
+<!--    </LinearLayout>-->
+
+<!--</androidx.constraintlayout.widget.ConstraintLayout>-->

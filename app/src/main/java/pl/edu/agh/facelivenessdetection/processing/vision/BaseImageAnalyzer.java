@@ -49,7 +49,7 @@ public abstract class BaseImageAnalyzer<T> implements ImageAnalysis.Analyzer, Fa
                     monitor.notifyDetectionStart();
                     final Task<T> tTask = detectInImage(InputImage.fromMediaImage(img, imageProxy.getImageInfo().getRotationDegrees()));
                     tTask.addOnSuccessListener(result -> {
-                        onSuccess(result, graphicOverlay);
+                        onSuccess(result);
                         graphicOverlay.add(new InferenceInfoGraphic(graphicOverlay,
                                 monitor.getAverageLatency(), monitor.getFPSRate()));
                         monitor.notifyDetectionCompleted();
@@ -87,7 +87,7 @@ public abstract class BaseImageAnalyzer<T> implements ImageAnalysis.Analyzer, Fa
 
     protected abstract Task<T> detectInImage(InputImage image);
 
-    protected abstract void onSuccess(T result, GraphicOverlay graphicOverlay);
+    protected abstract void onSuccess(T result);
 
     protected abstract void onFailure(Exception e);
 }

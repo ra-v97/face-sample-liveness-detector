@@ -2,12 +2,17 @@ package pl.edu.agh.facelivenessdetection.controller;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.graphics.Matrix;
+import android.graphics.Point;
+import android.graphics.RectF;
 import android.os.Build;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.Size;
+import android.view.Display;
 import android.view.ScaleGestureDetector;
 import android.view.Surface;
+import android.view.WindowManager;
 
 import androidx.annotation.Nullable;
 import androidx.camera.core.Camera;
@@ -31,6 +36,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import pl.edu.agh.facelivenessdetection.multithreading.ScopedExecutor;
 import pl.edu.agh.facelivenessdetection.preference.PreferenceUtils;
 import pl.edu.agh.facelivenessdetection.preference.SharedPreferences;
 import pl.edu.agh.facelivenessdetection.processing.AuthWithFaceLivenessDetectMethodType;
@@ -74,7 +80,7 @@ public class CameraManager {
     private DisplayMetrics displayMetrics;
 
     @Nullable
-    private ExecutorService cameraExecutor;
+    private ScopedExecutor cameraExecutor;
 
     @Nullable
     private ImageCapture imageCapture;
@@ -97,7 +103,7 @@ public class CameraManager {
     }
 
     private void createCameraExecutor() {
-        cameraExecutor = Executors.newFixedThreadPool(2);
+        cameraExecutor = new ScopedExecutor(Executors.newFixedThreadPool(2));
     }
 
     public Optional<ImageAnalysis.Analyzer> resolveAnalyzer() {
@@ -144,9 +150,9 @@ public class CameraManager {
                             imageCapture,
                             imageAnalyzer))
                     .orElseThrow(() -> new RuntimeException("Cannot obtain camera"));
-
             Optional.ofNullable(preview)
                     .ifPresent(p -> p.setSurfaceProvider(previewView.getSurfaceProvider()));
+
         } catch (Exception e) {
             Log.e(TAG, "Use case binding failed", e);
         }
@@ -192,7 +198,7 @@ public class CameraManager {
                         .setTargetRotation(isEmulator() ? CAMERA_ANALYZER_ROTATION : DEFAULT_ANALYZER_ROTATION)
                         .build();
 
-                //previewView.setRotation(isEmulator() ? CAMERA_PREVIEW_ROTATION : DEFAULT_PREVIEW_ROTATION);
+               // previewView.setRotation(isEmulator() ? CAMERA_PREVIEW_ROTATION : DEFAULT_PREVIEW_ROTATION);
 
                 resolveAnalyzer()
                         .ifPresent(analyzer -> imageAnalyzer.setAnalyzer(Objects.requireNonNull(cameraExecutor), analyzer));
@@ -220,6 +226,9 @@ public class CameraManager {
         if (activeLivenessAnalyzer != null) {
             activeLivenessAnalyzer.stop();
             activeLivenessAnalyzer = null;
+        }
+        if (cameraExecutor != null) {
+            cameraExecutor.shutdown();
         }
     }
 
@@ -249,10 +258,6 @@ public class CameraManager {
         Objects.requireNonNull(imageAnalyzer);
         return imageAnalyzer.getTargetRotation() == Surface.ROTATION_90
                 || imageAnalyzer.getTargetRotation() == Surface.ROTATION_270;
-    }
-
-    public boolean isFrontMode() {
-        return cameraSelectorOption == CameraSelector.LENS_FACING_FRONT;
     }
 
     public void performFaceLivenessDetectionTrigger(DetectionVisualizer visualizer) {

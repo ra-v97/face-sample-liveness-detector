@@ -1,0 +1,74 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory app:title="Detector">
+        <DropDownPreference
+            app:key="active_method"
+            app:title="Active detection method"
+            app:entries="@array/detection_methods"
+            app:entryValues="@array/detection_methods_keys"
+            app:useSimpleSummaryProvider="true"
+            app:persistent="true"/>
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="Face Activity Liveness Detection">
+        <SwitchPreferenceCompat
+            app:enabled="true"
+            app:defaultValue="true"
+            app:key="activity_method_auto_check"
+            app:title="@string/face_liveness_auto_check"
+            app:persistent="true"/>
+
+        <SeekBarPreference
+            app:key="auto_check_timeout"
+            app:title="@string/auto_check_timeout_title"
+            app:min="1"
+            android:max="10"
+            app:defaultValue="5"
+            app:showSeekBarValue="true"
+            app:persistent="true"/>
+
+        <SeekBarPreference
+            app:key="face_actions_number"
+            app:title="@string/face_actions_number_label"
+            app:min="1"
+            android:max="4"
+            app:defaultValue="2"
+            app:showSeekBarValue="true"
+            app:persistent="true"/>
+
+        <SeekBarPreference
+            app:key="verification_timeout"
+            app:title="@string/verification_timeout_label"
+            app:min="1"
+            android:max="10"
+            app:defaultValue="4"
+            app:showSeekBarValue="true"
+            app:persistent="true"/>
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="Face Flashing Liveness Detection">
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="Results storage">
+
+        <SwitchPreferenceCompat
+            app:enabled="true"
+            app:defaultValue="false"
+            app:key="logging_active_switch"
+            app:title="@string/logging_active_switch_label"
+            app:persistent="true"/>
+
+        <EditTextPreference
+            app:key="log_file_name"
+            app:title="@string/log_file_name_label"
+            app:persistent="true"/>
+
+        <EditTextPreference
+            app:key="logging_tag"
+            app:title="@string/logging_tag_label"
+            app:dialogTitle="@string/logging_tag_label"
+            app:dialogMessage="@string/logging_tag_label"
+            app:persistent="true"/>
+    </PreferenceCategory>
+</PreferenceScreen>

@@ -12,10 +12,6 @@ public class ProcessingMonitor {
 
     private static final long INTERVAL_MS = 1000;
 
-    private static final long MAX_RUN_MS = 0;
-
-    private static final long MIN_RUN_MS = Long.MAX_VALUE;
-
     private final Timer fpsTimer;
 
     private final ActivityManager activityManager;
@@ -52,7 +48,7 @@ public class ProcessingMonitor {
                 }, 0, INTERVAL_MS);
     }
 
-    public void notifyDetectionStart(){
+    public void notifyDetectionStart() {
         startMs.set(SystemClock.elapsedRealtime());
     }
 
@@ -67,9 +63,9 @@ public class ProcessingMonitor {
         return fpsRate.get();
     }
 
-    public long getAverageLatency(){
+    public long getAverageLatency() {
         final long runs = numRuns.get();
-        if(runs == 0){
+        if (runs == 0) {
             return 0;
         }
         return totalRunMs.get() / numRuns.get();
