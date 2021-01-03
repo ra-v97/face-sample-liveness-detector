@@ -98,8 +98,6 @@ public class CameraManager {
         this.previewView = previewView;
         this.lifecycleOwner = lifecycleOwner;
         this.graphicOverlay = graphicOverlay;
-
-        createCameraExecutor();
     }
 
     private void createCameraExecutor() {
@@ -188,6 +186,7 @@ public class CameraManager {
     public void startCamera() {
         final ListenableFuture<ProcessCameraProvider> cameraProviderFuture =
                 ProcessCameraProvider.getInstance(context);
+        createCameraExecutor();
         cameraProviderFuture.addListener(() -> {
             try {
                 cameraProvider = cameraProviderFuture.get();
@@ -197,8 +196,6 @@ public class CameraManager {
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                         .setTargetRotation(isEmulator() ? CAMERA_ANALYZER_ROTATION : DEFAULT_ANALYZER_ROTATION)
                         .build();
-
-               // previewView.setRotation(isEmulator() ? CAMERA_PREVIEW_ROTATION : DEFAULT_PREVIEW_ROTATION);
 
                 resolveAnalyzer()
                         .ifPresent(analyzer -> imageAnalyzer.setAnalyzer(Objects.requireNonNull(cameraExecutor), analyzer));

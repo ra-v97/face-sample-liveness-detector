@@ -19,6 +19,15 @@
             app:title="@string/face_liveness_auto_check"
             app:persistent="true"/>
 
+        <EditTextPreference
+            android:name="@string/probability_threshold_label"
+            android:enabled="true"
+            android:persistent="true"
+            android:inputType="number"
+            android:defaultValue="60"
+            android:title="@string/probability_threshold_label"
+            android:key="probability_threshold" />
+
         <SeekBarPreference
             app:key="auto_check_timeout"
             app:title="@string/auto_check_timeout_title"
@@ -68,7 +77,6 @@
             app:key="logging_tag"
             app:title="@string/logging_tag_label"
             app:dialogTitle="@string/logging_tag_label"
-            app:dialogMessage="@string/logging_tag_label"
             app:persistent="true"/>
     </PreferenceCategory>
 </PreferenceScreen>

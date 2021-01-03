@@ -27,7 +27,7 @@ public class ActivityDetectionStatus {
 
     private float actionRecognitionProbabilityLevel;
 
-    private List<ActivityRecognitionStatus> lastRecognizedActionsSequence;
+    private List<ActivityRecognitionStatus> recognizedActionsSequence;
 
     private List<FaceState> allFaceStates;
 
@@ -39,7 +39,7 @@ public class ActivityDetectionStatus {
 
     public ActivityDetectionStatus() {
         allFaceStates = Lists.newLinkedList();
-        lastRecognizedActionsSequence = Lists.newLinkedList();
+        recognizedActionsSequence = Lists.newLinkedList();
     }
 
     public void setActiveTag(String activeTag) {
@@ -72,10 +72,10 @@ public class ActivityDetectionStatus {
     }
 
     public void addNewRecognizedAction(ActivityRecognitionStatus action) {
-        if (lastRecognizedActionsSequence.size() > requiredActionsNumber) {
-            lastRecognizedActionsSequence.remove(0);
+        if (recognizedActionsSequence.size() > requiredActionsNumber) {
+            recognizedActionsSequence.remove(0);
         }
-        lastRecognizedActionsSequence.add(action);
+        recognizedActionsSequence.add(action);
     }
 
     public JSONObject getJson() throws JSONException {

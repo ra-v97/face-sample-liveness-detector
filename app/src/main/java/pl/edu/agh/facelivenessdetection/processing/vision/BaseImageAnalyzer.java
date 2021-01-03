@@ -90,6 +90,10 @@ public abstract class BaseImageAnalyzer<T> implements ImageAnalysis.Analyzer, Fa
         return prefs.getString("logging_tag", null);
     }
 
+    protected Context getContext(){
+        return context;
+    }
+
     public void stop() {
         monitor.stopTimer();
     }

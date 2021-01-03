@@ -142,7 +142,6 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
     }
 
     public void onDetectButtonClick(View view) {
-        persistenceManager.writeFileOnInternalStorage(new ActivityDetectionStatus());
         clearInfo();
         Objects.requireNonNull(cameraManager).performFaceLivenessDetectionTrigger(this);
     }
@@ -219,6 +218,7 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
     public void onResume() {
         super.onResume();
         clearInfo();
+        setDetectionStatus(LivenessDetectionStatus.UNKNOWN);
         if (cameraManager != null) {
             cameraManager.startCamera();
         } else {
