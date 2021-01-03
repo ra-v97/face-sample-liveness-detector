@@ -17,14 +17,21 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.ListAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.annotation.KeepName;
+import com.google.common.collect.Lists;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import pl.edu.agh.facelivenessdetection.controller.CameraManager;
+import pl.edu.agh.facelivenessdetection.handler.LoggingHandler;
 import pl.edu.agh.facelivenessdetection.processing.AuthWithFaceLivenessDetectMethodType;
 import pl.edu.agh.facelivenessdetection.utils.PermissionManager;
 import pl.edu.agh.facelivenessdetection.visualisation.GraphicOverlay;
@@ -43,17 +50,27 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
 
     private TextView livenessStatusTextView;
 
+    private ListView loggingList;
+
     private PreviewView previewView;
 
     private GraphicOverlay graphicOverlay;
 
     private final StatusChangeHandler statusChangeHandler;
 
+    private final LoggingHandler loggingHandler;
+
+    private final List<String> logs;
+
+    private ArrayAdapter<String> adapter;
+
     @Nullable
     private CameraManager cameraManager;
 
     public MainActivity() {
         statusChangeHandler = new StatusChangeHandler(this);
+        loggingHandler = new LoggingHandler(this);
+        logs = Lists.newArrayList();
     }
 
     @Override
@@ -62,7 +79,10 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
 
         setContentView(R.layout.activity_main);
 
-       // livenessStatusTextView = findViewById(R.id.statusView);
+        livenessStatusTextView = findViewById(R.id.statusView);
+        loggingList = findViewById(R.id.logger_list);
+        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, logs);
+        loggingList.setAdapter(adapter);
 
         previewView = findViewById(R.id.preview_view);
         if (previewView == null) {
@@ -73,12 +93,12 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
             Log.d(TAG, "graphicOverlay is null");
         }
 
-        createCameraManager();
-        setUpViewModelProvider();
-
         if (!PermissionManager.allPermissionsGranted(this)) {
             PermissionManager.getRuntimePermissions(this);
         }
+
+        createCameraManager();
+        setUpViewModelProvider();
     }
 
     @Override
@@ -112,6 +132,7 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
     }
 
     public void onDetectButtonClick(View view) {
+        clearInfo();
         Objects.requireNonNull(cameraManager).performFaceLivenessDetectionTrigger(this);
     }
 
@@ -123,6 +144,16 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
         final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         final String activeMethodStr = prefs.getString("active_method", "face_activity_method");
         return AuthWithFaceLivenessDetectMethodType.fromString(activeMethodStr);
+    }
+
+    public void addLoggingMessage(String message){
+        logs.add(message);
+        adapter.notifyDataSetChanged();
+    }
+
+    public void clearLogger(){
+        logs.clear();
+        adapter.notifyDataSetChanged();
     }
 
     public void setDetectionStatus(LivenessDetectionStatus status) {
@@ -151,6 +182,24 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
     }
 
     @Override
+    public void logInfo(String message) {
+        final Message msg = loggingHandler.obtainMessage();
+        final Bundle b = new Bundle();
+        b.putString(LoggingHandler.LOG_MESSAGE_KEY, message);
+        msg.setData(b);
+        loggingHandler.sendMessage(msg);
+    }
+
+    @Override
+    public void clearInfo() {
+        final Message msg = loggingHandler.obtainMessage();
+        final Bundle b = new Bundle();
+        b.putBoolean(LoggingHandler.CLEAR_KEY, true);
+        msg.setData(b);
+        loggingHandler.sendMessage(msg);
+    }
+
+    @Override
     public void showToast(final String text) {
         runOnUiThread(() -> Toast.makeText(MainActivity.this, text, Toast.LENGTH_LONG).show());
     }
@@ -158,6 +207,7 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
     @Override
     public void onResume() {
         super.onResume();
+        clearInfo();
         if (cameraManager != null) {
             cameraManager.startCamera();
         } else {
