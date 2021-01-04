@@ -1,9 +1,8 @@
 package pl.edu.agh.facelivenessdetection.processing.liveness.flashing;
 
 import android.content.Context;
+import android.graphics.Rect;
 import android.util.Log;
-
-import androidx.annotation.NonNull;
 
 import com.google.android.gms.tasks.Task;
 import com.google.mlkit.vision.common.InputImage;
@@ -14,37 +13,37 @@ import com.google.mlkit.vision.face.FaceDetectorOptions;
 
 import java.util.List;
 
-import pl.edu.agh.facelivenessdetection.processing.FaceLivenessDetector;
-import pl.edu.agh.facelivenessdetection.processing.vision.VisionProcessorBase;
+import pl.edu.agh.facelivenessdetection.processing.vision.BaseImageAnalyzer;
 import pl.edu.agh.facelivenessdetection.visualisation.DetectionVisualizer;
 import pl.edu.agh.facelivenessdetection.visualisation.GraphicOverlay;
 import pl.edu.agh.facelivenessdetection.visualisation.drawer.FaceGraphic;
 
-public class FaceFlashingLivenessDetector extends VisionProcessorBase<List<Face>> implements FaceLivenessDetector {
+public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<List<Face>> {
 
     private static final String TAG = "FaceDetectorProcessor";
 
     private final FaceDetector detector;
 
-    public FaceFlashingLivenessDetector(Context context) {
-        this(
-                context,
-                new FaceDetectorOptions.Builder()
-                        .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_ALL)
-                        .enableTracking()
-                        .build());
+    public FaceFlashingLivenessDetector(Context context, GraphicOverlay overlay, boolean isHorizontalMode,
+                                        FaceDetectorOptions options) {
+        super(context, overlay, isHorizontalMode);
+        Log.v(TAG, "Face detector options: " + options);
+        detector = FaceDetection.getClient(options);
     }
 
-    public FaceFlashingLivenessDetector(Context context, FaceDetectorOptions options) {
-        super(context);
-        Log.v(MANUAL_TESTING_LOG, "Face detector options: " + options);
-        detector = FaceDetection.getClient(options);
+    @Override
+    public void livenessDetectionTrigger(DetectionVisualizer visualizer) {
+        Log.i(TAG, "Method triggered");
     }
 
     @Override
     public void stop() {
         super.stop();
-        detector.close();
+        try {
+            detector.close();
+        } catch (Exception e) {
+            Log.e(TAG, "Exception thrown while trying to close Face Detector: $e");
+        }
     }
 
     @Override
@@ -53,24 +52,19 @@ public class FaceFlashingLivenessDetector extends VisionProcessorBase<List<Face>
     }
 
     @Override
-    protected void onSuccess(@NonNull List<Face> faces, @NonNull GraphicOverlay graphicOverlay) {
-        for (Face face : faces) {
-            graphicOverlay.add(new FaceGraphic(graphicOverlay, face));
-        }
+    protected void onSuccess(List<Face> result) {
+        final GraphicOverlay graphicOverlay = getGraphicOverlay();
+        graphicOverlay.clear();
+        result.forEach(res -> {
+            // TODO Check rect param
+            final FaceGraphic faceGraphic = new FaceGraphic(graphicOverlay, res);
+            graphicOverlay.add(faceGraphic);
+        });
+        graphicOverlay.postInvalidate();
     }
 
     @Override
-    protected void onFailure(@NonNull Exception e) {
-        Log.e(TAG, "Face detection failed " + e);
-    }
-
-    @Override
-    public void livenessDetectionTrigger(DetectionVisualizer visualizer) {
-        Log.i(TAG, "FaceFlashingLivenessDetector face liveness detection triggered");
-    }
-
-    @Override
-    public void terminate() {
-        Log.i(TAG, "FaceFlashingLivenessDetector face liveness detection terminated");
+    protected void onFailure(Exception e) {
+        Log.w(TAG, "Face Detector failed.$e");
     }
 }

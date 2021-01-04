@@ -2,93 +2,55 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/textureView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_gravity="center"
     tools:context=".MainActivity">
 
-    <RadioGroup
-        android:id="@+id/radioGroup"
-        android:layout_width="360dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:orientation="vertical"
+    <FrameLayout
+        android:id="@+id/frameLayout"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/linearLayoutMain"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <TextView
-            android:id="@+id/availableMethodsLabel"
+        <androidx.camera.view.PreviewView
+            android:id="@+id/preview_view"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/face_liveness_detection_methods_label"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            android:layout_height="match_parent"
+            app:scaleType="fillCenter">
 
-        <RadioButton
-            android:id="@+id/radioButtonMethod1"
+        </androidx.camera.view.PreviewView>
+
+        <pl.edu.agh.facelivenessdetection.visualisation.GraphicOverlay
+            android:id="@+id/graphic_overlay"
             android:layout_width="match_parent"
-            android:layout_height="32dp"
-            android:onClick="onToggleMethod1"
-            android:text="@string/liveness_detection_method_1_name"
-            android:textSize="18sp" />
+            android:layout_height="match_parent" />
 
-        <RadioButton
-            android:id="@+id/radioButtonMethod2"
-            android:layout_width="match_parent"
-            android:layout_height="32dp"
-            android:onClick="onToggleMethod2"
-            android:text="@string/liveness_detection_method_2_name"
-            android:textSize="18sp" />
-
-    </RadioGroup>
-
-    <androidx.camera.view.PreviewView
-        android:id="@+id/preview_view"
-        android:layout_width="360dp"
-        android:layout_height="0dp"
-        android:layout_marginTop="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/linearLayout"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/radioGroup"/>
-
-    <pl.edu.agh.facelivenessdetection.visualisation.GraphicOverlay
-        android:id="@+id/graphic_overlay"
-        android:layout_width="360dp"
-        android:layout_height="0dp"
-        android:layout_marginTop="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/linearLayout"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/radioGroup" />
+    </FrameLayout>
 
     <LinearLayout
-        android:id="@+id/linearLayout"
-        android:layout_width="360dp"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="32dp"
-        android:gravity="fill_horizontal"
+        android:id="@+id/linearLayoutMain"
+        android:layout_width="0dp"
+        android:layout_height="80dp"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:paddingLeft="32dp"
+        android:paddingRight="32dp"
+        app:layout_constraintBottom_toTopOf="@+id/logger_list"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/preview_view">
+        app:layout_constraintTop_toBottomOf="@+id/frameLayout">
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <Button
-                android:id="@+id/button"
-                android:layout_width="152dp"
-                android:layout_height="64dp"
-                android:onClick="onDetectButtonClick"
-                android:text="@string/detect_button_label"
-                android:textSize="18sp" />
-        </LinearLayout>
+        <Button
+            android:id="@+id/button"
+            android:layout_width="152dp"
+            android:layout_height="64dp"
+            android:onClick="onDetectButtonClick"
+            android:text="@string/detect_button_label"
+            android:textSize="18sp" />
 
         <Space
             android:layout_width="0dp"
@@ -96,32 +58,40 @@
             android:layout_weight="1" />
 
         <LinearLayout
+            android:id="@+id/linearLayout2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:gravity="center"
             android:orientation="vertical">
 
             <TextView
                 android:id="@+id/textView2"
-                android:layout_width="144dp"
-                android:layout_height="40dp"
+                android:layout_width="120dp"
+                android:layout_height="32dp"
                 android:gravity="center"
                 android:text="@string/status_label"
                 android:textAlignment="center"
-                android:textSize="24sp" />
+                android:textSize="18sp" />
 
             <TextView
                 android:id="@+id/statusView"
-                android:layout_width="144dp"
-                android:layout_height="40dp"
+                android:layout_width="120dp"
+                android:layout_height="32dp"
                 android:background="#FFEB3B"
                 android:gravity="center"
                 android:text="@string/unknown_status_label"
                 android:textAlignment="center"
-                android:textSize="24sp" />
+                android:textSize="18sp" />
         </LinearLayout>
 
     </LinearLayout>
+
+    <ListView
+        android:id="@+id/logger_list"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayoutMain" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

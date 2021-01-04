@@ -2,7 +2,7 @@ package pl.edu.agh.facelivenessdetection.processing.liveness.activity;
 
 import com.google.mlkit.vision.face.Face;
 
-class FaceState {
+public class FaceState {
     private Float leftEyeOpenedProb = 0f;
     private Float rightEyeOpenedProb = 0f;
     private Float headRotation = 0f;

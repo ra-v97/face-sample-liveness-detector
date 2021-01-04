@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <FrameLayout
+        android:id="@+id/frameLayout"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/linearLayout"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <androidx.camera.view.PreviewView
+            android:id="@+id/preview_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:scaleType="fillCenter">
+
+        </androidx.camera.view.PreviewView>
+
+        <pl.edu.agh.facelivenessdetection.visualisation.GraphicOverlay
+            android:id="@+id/graphic_overlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+    </FrameLayout>
+
+    <LinearLayout
+        android:id="@+id/linearLayout"
+        android:layout_width="240dp"
+        android:layout_height="match_parent"
+        android:gravity="bottom|center_horizontal"
+        android:orientation="vertical"
+        android:padding="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/frameLayout"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ListView
+            android:id="@+id/logger_list"
+            android:layout_width="match_parent"
+            android:layout_height="180dp" />
+
+        <LinearLayout
+            android:id="@+id/linearLayoutInner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal|center_vertical"
+            android:orientation="horizontal"
+            android:paddingTop="16dp"
+            android:paddingBottom="16dp">
+
+            <TextView
+                android:id="@+id/textView2"
+                android:layout_width="96dp"
+                android:layout_height="32dp"
+                android:gravity="center"
+                android:text="@string/status_label"
+                android:textAlignment="center"
+                android:textSize="18sp" />
+
+            <TextView
+                android:id="@+id/statusView"
+                android:layout_width="96dp"
+                android:layout_height="32dp"
+                android:background="#FFEB3B"
+                android:gravity="center"
+                android:text="@string/unknown_status_label"
+                android:textAlignment="center"
+                android:textSize="18sp" />
+
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/button"
+            android:layout_width="152dp"
+            android:layout_height="64dp"
+            android:onClick="onDetectButtonClick"
+            android:text="@string/detect_button_label"
+            android:textSize="18sp" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+    <!--<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"-->
+    <!--    xmlns:app="http://schemas.android.com/apk/res-auto"-->
+    <!--    xmlns:tools="http://schemas.android.com/tools"-->
+    <!--    android:id="@+id/textureView"-->
+    <!--    android:layout_width="match_parent"-->
+    <!--    android:layout_height="match_parent"-->
+    <!--    android:layout_gravity="center"-->
+    <!--    tools:context=".MainActivity">-->
+
+    <!--    <pl.edu.agh.facelivenessdetection.visualisation.GraphicOverlay-->
+    <!--        android:id="@+id/graphic_overlay"-->
+    <!--        android:layout_width="match_parent"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        tools:layout_editor_absoluteX="16dp" />-->
+
+    <!--    <androidx.camera.view.PreviewView-->
+    <!--        android:id="@+id/preview_view"-->
+    <!--        android:layout_width="match_parent"-->
+    <!--        android:layout_height="match_parent"-->
+    <!--        tools:layout_editor_absoluteX="31dp"-->
+    <!--        tools:layout_editor_absoluteY="-102dp">-->
+
+    <!--    </androidx.camera.view.PreviewView>-->
+
+    <!--    <LinearLayout-->
+    <!--        android:id="@+id/linearLayout"-->
+    <!--        android:layout_width="380dp"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        android:gravity="fill_horizontal|fill_vertical"-->
+    <!--        android:orientation="horizontal"-->
+    <!--        app:layout_constraintBottom_toBottomOf="parent"-->
+    <!--        app:layout_constraintEnd_toEndOf="parent"-->
+    <!--        app:layout_constraintStart_toStartOf="parent">-->
+
+    <!--        <LinearLayout-->
+    <!--            android:layout_width="wrap_content"-->
+    <!--            android:layout_height="wrap_content"-->
+    <!--            android:orientation="vertical">-->
+
+    <!--            <Button-->
+    <!--                android:id="@+id/button"-->
+    <!--                android:layout_width="152dp"-->
+    <!--                android:layout_height="64dp"-->
+    <!--                android:onClick="onDetectButtonClick"-->
+    <!--                android:text="@string/detect_button_label"-->
+    <!--                android:textSize="18sp" />-->
+    <!--        </LinearLayout>-->
+
+    <!--        <Space-->
+    <!--            android:layout_width="0dp"-->
+    <!--            android:layout_height="wrap_content"-->
+    <!--            android:layout_weight="1" />-->
+
+    <!--        <LinearLayout-->
+    <!--            android:layout_width="wrap_content"-->
+    <!--            android:layout_height="wrap_content"-->
+    <!--            android:layout_gravity="center"-->
+    <!--            android:gravity="center"-->
+    <!--            android:orientation="vertical">-->
+
+    <!--            <TextView-->
+    <!--                android:id="@+id/textView2"-->
+    <!--                android:layout_width="144dp"-->
+    <!--                android:layout_height="40dp"-->
+    <!--                android:gravity="center"-->
+    <!--                android:text="@string/status_label"-->
+    <!--                android:textAlignment="center"-->
+    <!--                android:textSize="24sp" />-->
+
+    <!--            <TextView-->
+    <!--                android:id="@+id/statusView"-->
+    <!--                android:layout_width="144dp"-->
+    <!--                android:layout_height="40dp"-->
+    <!--                android:background="#FFEB3B"-->
+    <!--                android:gravity="center"-->
+    <!--                android:text="@string/unknown_status_label"-->
+    <!--                android:textAlignment="center"-->
+    <!--                android:textSize="24sp" />-->
+    <!--        </LinearLayout>-->
+
+    <!--    </LinearLayout>-->
+
+    <!--</androidx.constraintlayout.widget.ConstraintLayout>-->

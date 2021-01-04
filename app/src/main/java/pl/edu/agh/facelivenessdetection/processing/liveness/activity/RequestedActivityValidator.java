@@ -2,51 +2,89 @@ package pl.edu.agh.facelivenessdetection.processing.liveness.activity;
 
 import android.util.Log;
 
+import com.google.common.collect.Lists;
+
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.LinkedList;
 import java.util.List;
 
-import static pl.edu.agh.facelivenessdetection.processing.liveness.activity.LivenessDetector.eyesChangeThreshold;
-import static pl.edu.agh.facelivenessdetection.processing.liveness.activity.LivenessDetector.headRotationChangeThreshold;
-import static pl.edu.agh.facelivenessdetection.processing.liveness.activity.LivenessDetector.smileChangeThreshold;
+import pl.edu.agh.facelivenessdetection.model.LivenessDetectionStatus;
+import pl.edu.agh.facelivenessdetection.visualisation.DetectionVisualizer;
 
 public class RequestedActivityValidator {
-    private static final Duration detectionPeriod = Duration.ofSeconds(10);
 
-    private final LocalDateTime startTime = LocalDateTime.now();
-    private final List<FaceState> stateList = new LinkedList<>();
+    private final DetectionVisualizer detectionVisualizer;
+
+    private final Duration detectionPeriod;
+
+    private final LocalDateTime startTime;
+
+    private final List<FaceState> stateList;
+
     private final List<PossibleActivity> requestedActivities;
 
-    RequestedActivityValidator(List<PossibleActivity> requestedActivities) {
+    private final float changeThreshold;
+
+    private final float headRotationChangeThreshold;
+
+    RequestedActivityValidator(DetectionVisualizer visualizer, List<PossibleActivity> requestedActivities, float changeThreshold,
+                               float headRotationChangeThreshold, int timeout) {
+        this.detectionVisualizer = visualizer;
         this.requestedActivities = requestedActivities;
+        this.changeThreshold = changeThreshold;
+        this.headRotationChangeThreshold = headRotationChangeThreshold;
+        this.detectionPeriod = Duration.ofSeconds(timeout);
+        this.startTime = LocalDateTime.now();
+        this.stateList = Lists.newLinkedList();
     }
 
     void addFaceState(FaceState state) {
         stateList.add(state);
     }
 
-    Boolean succeeded() {
-        if (stateList.isEmpty()) {
-            return null;
+    LivenessDetectionStatus performVerification() {
+        if (stateList.size() < requestedActivities.size()) {
+            return LivenessDetectionStatus.UNKNOWN;
         }
 
-        if (tasksCompleted() && !timeExpired()) {
-            return true;
+        final boolean taskCompleted = tasksCompleted();
+        final boolean timeExpired = timeExpired();
+
+
+        if (taskCompleted && !timeExpired) {
+            detectionVisualizer.logInfo("Face is real");
+            return LivenessDetectionStatus.REAL;
         }
 
-        if (!tasksCompleted() && timeExpired()) {
-            return false;
+        if (!taskCompleted && timeExpired) {
+            detectionVisualizer.logInfo("Face is fake");
+            return LivenessDetectionStatus.FAKE;
         }
-        return null;
+
+        if(timeExpired){
+            return LivenessDetectionStatus.FAKE;
+        }
+
+         return LivenessDetectionStatus.UNKNOWN;
     }
 
     private boolean tasksCompleted() {
-        FaceState initial = stateList.get(0);
-        return requestedActivities.stream().allMatch(activity -> stateList.stream().skip(1).anyMatch(state -> checkActivity(activity, initial, state)));
+        int idx = 1;
+        int counter = 0;
+        final FaceState initial = stateList.get(0);
+        for (PossibleActivity activity : requestedActivities) {
+            for (int i = idx; i < stateList.size(); i++) {
+                if (checkActivity(activity, initial, stateList.get(i))) {
+                    idx = i + 1;
+                    counter++;
+                    break;
+                }
+            }
+        }
+        return counter == requestedActivities.size();
     }
 
-    private static boolean checkActivity(PossibleActivity activity, FaceState initial, FaceState state) {
+    private boolean checkActivity(PossibleActivity activity, FaceState initial, FaceState state) {
         switch (activity) {
             case SMILE:
                 return smiled(initial, state);
@@ -60,23 +98,23 @@ public class RequestedActivityValidator {
         return false;
     }
 
-    private static boolean blinked(FaceState initial, FaceState state) {
+    private boolean blinked(FaceState initial, FaceState state) {
         FaceState diff = FaceState.diff(initial, state);
-        return (Math.abs(diff.getLeftEyeOpenedProb()) > eyesChangeThreshold && Math.abs(diff.getRightEyeOpenedProb()) > eyesChangeThreshold);
+        return (Math.abs(diff.getLeftEyeOpenedProb()) > changeThreshold && Math.abs(diff.getRightEyeOpenedProb()) > changeThreshold);
     }
 
-    private static boolean smiled(FaceState initial, FaceState state) {
+    private boolean smiled(FaceState initial, FaceState state) {
         FaceState diff = FaceState.diff(initial, state);
-        return Math.abs(diff.getSmileProb()) > smileChangeThreshold;
+        return Math.abs(diff.getSmileProb()) > changeThreshold;
     }
 
-    private static boolean turnedHeadLeft(FaceState initial, FaceState state) {
+    private boolean turnedHeadLeft(FaceState initial, FaceState state) {
         FaceState diff = FaceState.diff(initial, state);
         Log.d("HEAD_TURN", "Turned head left: " + diff.getHeadRotation());
         return diff.getHeadRotation() < -headRotationChangeThreshold;
     }
 
-    private static boolean turnedHeadRight(FaceState initial, FaceState state) {
+    private boolean turnedHeadRight(FaceState initial, FaceState state) {
         FaceState diff = FaceState.diff(initial, state);
         Log.d("HEAD_TURN", "Turned head right: " + diff.getHeadRotation());
         return diff.getHeadRotation() > headRotationChangeThreshold;

@@ -14,6 +14,6 @@ public interface FaceLivenessDetector {
 
     /**
      * Interrupts liveness detection process and releases all resources used by detection algorithm
-     * */
-    void terminate();
+     */
+    void stop();
 }

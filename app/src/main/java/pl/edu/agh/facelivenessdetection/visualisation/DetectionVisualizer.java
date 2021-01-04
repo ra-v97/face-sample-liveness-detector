@@ -1,8 +1,5 @@
 package pl.edu.agh.facelivenessdetection.visualisation;
 
-
-import android.widget.Toast;
-
 import pl.edu.agh.facelivenessdetection.model.LivenessDetectionStatus;
 
 public interface DetectionVisualizer {
@@ -13,7 +10,17 @@ public interface DetectionVisualizer {
     void visualizeStatus(LivenessDetectionStatus status);
 
     /**
+     * This method lets you to log information into main screen list from any thread.
+     */
+    void logInfo(String message);
+
+    /**
+     * This method lets you to clear log information from main screen list from any thread.
+     */
+    void clearInfo();
+
+    /**
      * Shows a Toast on the UI thread.
      */
-     void showToast(final String text);
+    void showToast(final String text);
 }

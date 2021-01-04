@@ -6,27 +6,81 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
+import pl.edu.agh.facelivenessdetection.model.LivenessDetectionStatus;
 import pl.edu.agh.facelivenessdetection.visualisation.DetectionVisualizer;
 
 
 class LivenessDetector {
-    static final float eyesChangeThreshold = 0.6f;
-    static final float headRotationChangeThreshold = 30f;
-    static final float smileChangeThreshold = 0.6f;
-    private static final float numberOfActivities = 2;
 
-    private final Duration detectionPeriod = Duration.ofSeconds(3);
+    private static final String IMPLICIT_ACTIVITY_LOG_FORMAT = "Detection" +
+            " stats: (leftEye,%.2f) (rightEye,%.2f) (smile,%.2f) (headRotation,%.2f)";
 
-    private final LocalDateTime startTime = LocalDateTime.now();
+    private static final int MIN_ACTIVITIES = 1;
+
+    private static final int MAX_ACTIVITIES = 4;
+
+    private static final float DEFAULT_THRESHOLD = 0.6f;
+
+    private static final float DEFAULT_HEAD_ROTATION = 20f;
+
+    private static final int MIN_TIMEOUT = 1;
+
+    private static final int MAX_TIMEOUT = 10;
+
+    private static final int DEFAULT_TIMEOUT = 4;
+
+    private final float changeThreshold;
+
+    private final int numberOfActivities;
+
+    private final int verificationTimeout;
+
+    private final boolean autoDetection;
+
+    private final Duration autoDetectionPeriod;
+
+    private final LocalDateTime startTime;
+
     private final List<FaceState> stateList = new LinkedList<>();
 
     private final DetectionVisualizer detectionVisualizer;
+
     private RequestedActivityValidator requestedActivityValidator = null;
 
-    LivenessDetector(DetectionVisualizer visualizer) {
+    LivenessDetector(DetectionVisualizer visualizer, float changeThreshold, int numberOfActivities,
+                     int verificationTimeout, boolean autoDetection, int autoDetectionTimeout) {
         detectionVisualizer = visualizer;
+
+        if (numberOfActivities >= MIN_ACTIVITIES && numberOfActivities <= MAX_ACTIVITIES) {
+            this.numberOfActivities = numberOfActivities;
+        } else {
+            this.numberOfActivities = 2;
+        }
+
+        if (Math.abs(changeThreshold) <= 1.0) {
+            this.changeThreshold = changeThreshold;
+        } else {
+            this.changeThreshold = DEFAULT_THRESHOLD;
+        }
+        this.autoDetection = autoDetection;
+
+        if (verificationTimeout >= MIN_TIMEOUT && verificationTimeout <= MAX_TIMEOUT) {
+            this.verificationTimeout = verificationTimeout;
+        } else {
+            this.verificationTimeout = DEFAULT_TIMEOUT;
+        }
+
+        this.startTime = LocalDateTime.now();
+
+        if (autoDetectionTimeout >= MIN_TIMEOUT && autoDetectionTimeout <= MAX_TIMEOUT) {
+            autoDetectionPeriod = Duration.ofSeconds(autoDetectionTimeout);
+        } else {
+            autoDetectionPeriod = Duration.ofSeconds(DEFAULT_TIMEOUT);
+        }
     }
 
     void addFaceState(FaceState state) {
@@ -36,32 +90,34 @@ class LivenessDetector {
         }
     }
 
-
-    Boolean isAlive() {
+    LivenessDetectionStatus isAlive() {
         if (stateList.isEmpty()) {
-            return null;
+            return LivenessDetectionStatus.UNKNOWN;
         }
-
         if (requestedActivityValidator != null) {
-            return requestedActivityValidator.succeeded();
+            return requestedActivityValidator.performVerification();
         }
-
-        if (implicitlyAlive() && !timeExpired()) {
-            return true;
+        if (checkAutoDetectionCondition()) {
+            if (implicitlyAlive()) {
+                detectionVisualizer.logInfo("Liveness confirmed by face movement");
+                return LivenessDetectionStatus.REAL;
+            }
+            return LivenessDetectionStatus.UNKNOWN;
         }
-
-        if (!implicitlyAlive() && timeExpired()) {
-            requestTasks();
-            return null;
-        }
-        return null;
+        requestTasks();
+        return LivenessDetectionStatus.UNKNOWN;
     }
 
     private void requestTasks() {
         List<PossibleActivity> requestedActivities = activitiesToPerform();
-        requestedActivityValidator = new RequestedActivityValidator(requestedActivities);
 
-        String activitiesNames = requestedActivities.stream().map(activity -> PossibleActivity.name(activity)).collect(Collectors.joining(", "));
+        requestedActivityValidator = new RequestedActivityValidator(detectionVisualizer,
+                requestedActivities, changeThreshold, DEFAULT_HEAD_ROTATION, verificationTimeout);
+
+        String activitiesNames = requestedActivities.stream()
+                .map(activity -> PossibleActivity.name(activity))
+                .collect(Collectors.joining(", "));
+
         detectionVisualizer.showToast("Please perform those activities: " + activitiesNames);
     }
 
@@ -76,21 +132,33 @@ class LivenessDetector {
         return activities;
     }
 
-    private boolean timeExpired() {
-        return Duration.between(startTime, LocalDateTime.now()).compareTo(detectionPeriod) > 0;
+    private boolean checkAutoDetectionCondition() {
+        return autoDetection
+                && Duration.between(startTime, LocalDateTime.now()).compareTo(autoDetectionPeriod) < 0;
     }
 
     private boolean implicitlyAlive() {
         FaceState initial = stateList.get(0);
-        return stateList.stream().skip(1).anyMatch(state -> LivenessDetector.changedSignificantly(initial, state));
+        Optional<FaceState> firstImplicitActiveState = stateList.stream()
+                .skip(1)
+                .filter(state -> changedSignificantly(initial, state))
+                .findFirst();
+        firstImplicitActiveState.ifPresent(state -> {
+            FaceState diff = FaceState.diff(initial, state);
+            detectionVisualizer.logInfo(String.format(Locale.US, IMPLICIT_ACTIVITY_LOG_FORMAT,
+                    diff.getLeftEyeOpenedProb(),
+                    diff.getRightEyeOpenedProb(),
+                    diff.getSmileProb(),
+                    diff.getHeadRotation()));
+        });
+        return firstImplicitActiveState.isPresent();
     }
 
-    private static boolean changedSignificantly(FaceState initial, FaceState state) {
+    private boolean changedSignificantly(FaceState initial, FaceState state) {
         FaceState diff = FaceState.diff(initial, state);
 
-        return Math.abs(diff.getHeadRotation()) > headRotationChangeThreshold ||
-                (Math.abs(diff.getLeftEyeOpenedProb()) > eyesChangeThreshold && Math.abs(diff.getRightEyeOpenedProb()) > eyesChangeThreshold) ||
-                Math.abs(diff.getSmileProb()) > smileChangeThreshold;
+        return Math.abs(diff.getHeadRotation()) > DEFAULT_HEAD_ROTATION ||
+                (Math.abs(diff.getLeftEyeOpenedProb()) > changeThreshold && Math.abs(diff.getRightEyeOpenedProb()) > changeThreshold) ||
+                Math.abs(diff.getSmileProb()) > changeThreshold;
     }
-
 }

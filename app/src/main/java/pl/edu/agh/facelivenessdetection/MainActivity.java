@@ -1,44 +1,47 @@
 package pl.edu.agh.facelivenessdetection;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.camera.core.CameraSelector;
-import androidx.camera.core.ImageAnalysis;
-import androidx.camera.core.Preview;
-import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
-import androidx.core.content.ContextCompat;
-import androidx.lifecycle.ViewModelProvider;
+import androidx.preference.PreferenceManager;
 
+import android.annotation.SuppressLint;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Message;
 import android.util.Log;
-import android.util.Size;
-import android.view.Surface;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
-import android.widget.RadioButton;
+import android.widget.ArrayAdapter;
+import android.widget.ListAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.annotation.KeepName;
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
-import com.google.mlkit.common.MlKitException;
+import com.google.common.collect.Lists;
 
-import java.util.Optional;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
+import pl.edu.agh.facelivenessdetection.controller.CameraManager;
+import pl.edu.agh.facelivenessdetection.handler.LoggingHandler;
+import pl.edu.agh.facelivenessdetection.persistence.ActivityDetectionStatus;
+import pl.edu.agh.facelivenessdetection.persistence.PersistenceManager;
 import pl.edu.agh.facelivenessdetection.processing.AuthWithFaceLivenessDetectMethodType;
-import pl.edu.agh.facelivenessdetection.preference.SharedPreferences;
 import pl.edu.agh.facelivenessdetection.utils.PermissionManager;
 import pl.edu.agh.facelivenessdetection.visualisation.GraphicOverlay;
-import pl.edu.agh.facelivenessdetection.processing.VisionImageProcessor;
-import pl.edu.agh.facelivenessdetection.model.CameraXViewModel;
-import pl.edu.agh.facelivenessdetection.controller.FaceLivenessDetectionController;
+
 import pl.edu.agh.facelivenessdetection.handler.StatusChangeHandler;
 import pl.edu.agh.facelivenessdetection.model.LivenessDetectionStatus;
-import pl.edu.agh.facelivenessdetection.preference.PreferenceUtils;
 import pl.edu.agh.facelivenessdetection.visualisation.DetectionVisualizer;
 
 @KeepName
@@ -49,63 +52,47 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
      */
     private static final String TAG = "LivePreviewMainActivity";
 
-    // Change this value if camera preview is rotated.
-    private static final int CAMERA_PREVIEW_ROTATION = Surface.ROTATION_90;
-
-    /*
-     * UI Elements
-     */
-    private RadioButton method1RadioButton;
-
-    private RadioButton method2RadioButton;
-
     private TextView livenessStatusTextView;
+
+    private ListView loggingList;
 
     private PreviewView previewView;
 
     private GraphicOverlay graphicOverlay;
-    /*
-     * Required elements
-     */
-    private final FaceLivenessDetectionController faceLivenessDetectionController;
-
-    private final BiMap<AuthWithFaceLivenessDetectMethodType, RadioButton> faceLivenessDetectorRadioButtonBiMap;
 
     private final StatusChangeHandler statusChangeHandler;
 
-    @Nullable
-    private ProcessCameraProvider cameraProvider;
+    private final LoggingHandler loggingHandler;
+
+    private final List<String> logs;
+
+    private ArrayAdapter<String> adapter;
+
+    private final Lock loggingLock;
 
     @Nullable
-    private Preview previewUseCase;
+    private CameraManager cameraManager;
 
     @Nullable
-    private ImageAnalysis analysisUseCase;
-
-    @Nullable
-    private VisionImageProcessor imageProcessor;
-
-    private boolean needUpdateGraphicOverlayImageSourceInfo;
-
-    private CameraSelector cameraSelector;
+    private PersistenceManager persistenceManager;
 
     public MainActivity() {
-        faceLivenessDetectionController = new FaceLivenessDetectionController();
-        faceLivenessDetectorRadioButtonBiMap = HashBiMap.create();
-
         statusChangeHandler = new StatusChangeHandler(this);
+        loggingHandler = new LoggingHandler(this);
+        logs = Lists.newArrayList();
+        loggingLock = new ReentrantLock();
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        createCameraSelector();
 
         setContentView(R.layout.activity_main);
 
-        method1RadioButton = findViewById(R.id.radioButtonMethod1);
-        method2RadioButton = findViewById(R.id.radioButtonMethod2);
         livenessStatusTextView = findViewById(R.id.statusView);
+        loggingList = findViewById(R.id.logger_list);
+        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, logs);
+        loggingList.setAdapter(adapter);
 
         previewView = findViewById(R.id.preview_view);
         if (previewView == null) {
@@ -116,73 +103,72 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
             Log.d(TAG, "graphicOverlay is null");
         }
 
-        initializeViewElements();
-        setActiveFaceDetectionMethod(AuthWithFaceLivenessDetectMethodType.FACE_ACTIVITY_METHOD);
-        setUpViewModelProvider();
-
         if (!PermissionManager.allPermissionsGranted(this)) {
             PermissionManager.getRuntimePermissions(this);
         }
+
+        createCameraManager();
+        createPersistenceManager();
+        setUpViewModelProvider();
     }
 
-    private void createCameraSelector() {
-        cameraSelector = new CameraSelector.Builder()
-                .requireLensFacing(SharedPreferences.getCameraLeansFacing())
-                .build();
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main_menu, menu);
+        return true;
     }
 
-    private void initializeViewElements() {
-        faceLivenessDetectorRadioButtonBiMap.put(AuthWithFaceLivenessDetectMethodType.FACE_ACTIVITY_METHOD,
-                method1RadioButton);
-        faceLivenessDetectorRadioButtonBiMap.put(AuthWithFaceLivenessDetectMethodType.FACE_FLASHING_METHOD,
-                method2RadioButton);
+    @SuppressLint("NonConstantResourceId")
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_settings:
+                final Intent settingsStartIntent = new Intent(MainActivity.this, SettingsActivity.class);
+                MainActivity.this.startActivity(settingsStartIntent);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private void createCameraManager() {
+        cameraManager = new CameraManager(this, previewView, this, graphicOverlay);
+    }
+
+    private void createPersistenceManager(){
+        persistenceManager = new PersistenceManager(this);
     }
 
     private void setUpViewModelProvider() {
-        new ViewModelProvider(this, ViewModelProvider.AndroidViewModelFactory.getInstance(getApplication()))
-                .get(CameraXViewModel.class)
-                .getProcessCameraProvider()
-                .observe(this, provider -> {
-                    cameraProvider = provider;
-                    if (PermissionManager.allPermissionsGranted(this)) {
-                        bindAllCameraUseCases();
-                    }
-                });
+        if (PermissionManager.allPermissionsGranted(this) && cameraManager != null) {
+            setActiveFaceDetectionMethod(loadActiveMethodFromPreferences());
+            cameraManager.startCamera();
+        }
     }
 
     public void onDetectButtonClick(View view) {
-        faceLivenessDetectionController.performFaceLivenessDetectionTrigger(this);
-    }
-
-    public void onToggleMethod1(View view) {
-        refreshFaceDetectionMethod(method1RadioButton);
-    }
-
-    public void onToggleMethod2(View view) {
-        refreshFaceDetectionMethod(method2RadioButton);
+        clearInfo();
+        Objects.requireNonNull(cameraManager).performFaceLivenessDetectionTrigger(this);
     }
 
     private void setActiveFaceDetectionMethod(AuthWithFaceLivenessDetectMethodType activeFaceDetectionMethod) {
-        faceLivenessDetectionController
-                .setFaceProcessorMethod(activeFaceDetectionMethod);
-        Optional.ofNullable(faceLivenessDetectorRadioButtonBiMap.get(activeFaceDetectionMethod))
-                .ifPresent(RadioButton::toggle);
+        Objects.requireNonNull(cameraManager).changeAnalyzer(activeFaceDetectionMethod);
     }
 
-    private void refreshFaceDetectionMethod(AuthWithFaceLivenessDetectMethodType activeFaceDetectionMethod) {
-        faceLivenessDetectionController.deactivateFaceLivenessDetector();
-        if (imageProcessor != null) {
-            imageProcessor.stop();
-        }
-        setActiveFaceDetectionMethod(activeFaceDetectionMethod);
-        bindAllCameraUseCases();
-
+    private AuthWithFaceLivenessDetectMethodType loadActiveMethodFromPreferences() {
+        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        final String activeMethodStr = prefs.getString("active_method", "face_activity_method");
+        return AuthWithFaceLivenessDetectMethodType.fromString(activeMethodStr);
     }
 
-    private void refreshFaceDetectionMethod(RadioButton methodRadioButton) {
-        refreshFaceDetectionMethod(faceLivenessDetectorRadioButtonBiMap.inverse()
-                .get(methodRadioButton));
-        setDetectionStatus(LivenessDetectionStatus.UNKNOWN);
+    public void addLoggingMessage(String message){
+        logs.add(message);
+        adapter.notifyDataSetChanged();
+    }
+
+    public void clearLogger(){
+        logs.clear();
+        adapter.notifyDataSetChanged();
     }
 
     public void setDetectionStatus(LivenessDetectionStatus status) {
@@ -211,6 +197,24 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
     }
 
     @Override
+    public void logInfo(String message) {
+        final Message msg = loggingHandler.obtainMessage();
+        final Bundle b = new Bundle();
+        b.putString(LoggingHandler.LOG_MESSAGE_KEY, message);
+        msg.setData(b);
+        loggingHandler.sendMessage(msg);
+    }
+
+    @Override
+    public void clearInfo() {
+        final Message msg = loggingHandler.obtainMessage();
+        final Bundle b = new Bundle();
+        b.putBoolean(LoggingHandler.CLEAR_KEY, true);
+        msg.setData(b);
+        loggingHandler.sendMessage(msg);
+    }
+
+    @Override
     public void showToast(final String text) {
         runOnUiThread(() -> Toast.makeText(MainActivity.this, text, Toast.LENGTH_LONG).show());
     }
@@ -218,129 +222,36 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
     @Override
     public void onResume() {
         super.onResume();
-        bindAllCameraUseCases();
+        clearInfo();
+        setDetectionStatus(LivenessDetectionStatus.UNKNOWN);
+        if (cameraManager != null) {
+            cameraManager.startCamera();
+        } else {
+            Log.e(TAG, "Camera is unavailable");
+        }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        if (imageProcessor != null) {
-            imageProcessor.stop();
-        }
-        faceLivenessDetectionController.deactivateFaceLivenessDetector();
+        Objects.requireNonNull(cameraManager).stopCamera();
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (imageProcessor != null) {
-            imageProcessor.stop();
-        }
-        faceLivenessDetectionController.deactivateFaceLivenessDetector();
+        Objects.requireNonNull(cameraManager).stopCamera();
     }
 
     @Override
     public void onRequestPermissionsResult(
-            int requestCode, String[] permissions, int[] grantResults) {
+            int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         Log.i(TAG, "Permission granted!");
-        if (PermissionManager.allPermissionsGranted(this)) {
-            bindAllCameraUseCases();
+        if (PermissionManager.allPermissionsGranted(this) && cameraManager != null) {
+            cameraManager.startCamera();
+        } else {
+            Log.e(TAG, "Camera start error");
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-    }
-
-    private void bindAllCameraUseCases() {
-        if (cameraProvider != null) {
-            // As required by CameraX API, unbinds all use cases before trying to re-bind any of them.
-            cameraProvider.unbindAll();
-            bindPreviewUseCase();
-            bindAnalysisUseCase();
-        }
-    }
-
-    private void bindPreviewUseCase() {
-        if (!PreferenceUtils.isCameraLiveViewportEnabled(this)) {
-            return;
-        }
-        if (cameraProvider == null) {
-            return;
-        }
-        if (previewUseCase != null) {
-            cameraProvider.unbind(previewUseCase);
-        }
-        final Preview.Builder builder = new Preview.Builder();
-        final Size targetResolution = PreferenceUtils.getCameraXTargetResolution(this);
-        if (targetResolution != null) {
-            builder.setTargetResolution(targetResolution);
-        }
-
-        previewUseCase = builder.build();
-        previewUseCase.setSurfaceProvider(previewView.getSurfaceProvider());
-        cameraProvider.bindToLifecycle(this, cameraSelector, previewUseCase);
-    }
-
-    private boolean isEmulator() {
-        return Build.FINGERPRINT.startsWith("generic")
-                || Build.FINGERPRINT.startsWith("unknown")
-                || Build.MODEL.contains("google_sdk")
-                || Build.MODEL.contains("Emulator")
-                || Build.MODEL.contains("Android SDK built for x86")
-                || Build.MODEL.contains("sdk_gphone")
-                || "google_sdk".equals(Build.PRODUCT);
-    }
-
-
-    private void bindAnalysisUseCase() {
-        if (cameraProvider == null) {
-            return;
-        }
-        if (analysisUseCase != null) {
-            cameraProvider.unbind(analysisUseCase);
-        }
-        if (imageProcessor != null) {
-            imageProcessor.stop();
-        }
-
-        faceLivenessDetectionController.obtainVisionProcessor(this).ifPresent(processor -> {
-            imageProcessor = processor;
-
-            final ImageAnalysis.Builder builder = new ImageAnalysis.Builder();
-            final Size targetResolution = PreferenceUtils.getCameraXTargetResolution(this);
-            if (targetResolution != null) {
-                builder.setTargetResolution(targetResolution);
-            }
-            if (isEmulator()) {
-                builder.setTargetRotation(CAMERA_PREVIEW_ROTATION);
-            }
-            analysisUseCase = builder.build();
-
-            needUpdateGraphicOverlayImageSourceInfo = true;
-            analysisUseCase.setAnalyzer(
-                    // imageProcessor.processImageProxy will use another thread to run the detection underneath,
-                    // thus we can just runs the analyzer itself on main thread.
-                    ContextCompat.getMainExecutor(this),
-                    imageProxy -> {
-                        if (needUpdateGraphicOverlayImageSourceInfo) {
-                            boolean isImageFlipped = SharedPreferences.getCameraLeansFacing() == CameraSelector.LENS_FACING_FRONT;
-                            int rotationDegrees = imageProxy.getImageInfo().getRotationDegrees();
-                            if (rotationDegrees == 0 || rotationDegrees == 180) {
-                                graphicOverlay.setImageSourceInfo(
-                                        imageProxy.getWidth(), imageProxy.getHeight(), isImageFlipped);
-                            } else {
-                                graphicOverlay.setImageSourceInfo(
-                                        imageProxy.getHeight(), imageProxy.getWidth(), isImageFlipped);
-                            }
-                            needUpdateGraphicOverlayImageSourceInfo = false;
-                        }
-                        try {
-                            imageProcessor.processImageProxy(imageProxy, graphicOverlay);
-                        } catch (MlKitException e) {
-                            Log.e(TAG, "Failed to process image. Error: " + e.getLocalizedMessage());
-                            Toast.makeText(getApplicationContext(), e.getLocalizedMessage(), Toast.LENGTH_SHORT)
-                                    .show();
-                        }
-                    });
-            cameraProvider.bindToLifecycle(this, cameraSelector, analysisUseCase);
-        });
     }
 }
