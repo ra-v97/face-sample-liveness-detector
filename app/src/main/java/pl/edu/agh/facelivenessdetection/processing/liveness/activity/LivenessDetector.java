@@ -6,6 +6,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import pl.edu.agh.facelivenessdetection.model.LivenessDetectionStatus;
@@ -13,6 +15,9 @@ import pl.edu.agh.facelivenessdetection.visualisation.DetectionVisualizer;
 
 
 class LivenessDetector {
+
+    private static final String IMPLICIT_ACTIVITY_LOG_FORMAT = "Detection" +
+            " stats: (leftEye,%.2f) (rightEye,%.2f) (smile,%.2f) (headRotation,%.2f)";
 
     private static final int MIN_ACTIVITIES = 1;
 
@@ -92,8 +97,9 @@ class LivenessDetector {
         if (requestedActivityValidator != null) {
             return requestedActivityValidator.performVerification();
         }
-        if(checkAutoDetectionCondition()){
-            if(implicitlyAlive()) {
+        if (checkAutoDetectionCondition()) {
+            if (implicitlyAlive()) {
+                detectionVisualizer.logInfo("Liveness confirmed by face movement");
                 return LivenessDetectionStatus.REAL;
             }
             return LivenessDetectionStatus.UNKNOWN;
@@ -105,8 +111,8 @@ class LivenessDetector {
     private void requestTasks() {
         List<PossibleActivity> requestedActivities = activitiesToPerform();
 
-        requestedActivityValidator = new RequestedActivityValidator(requestedActivities,
-                changeThreshold, DEFAULT_HEAD_ROTATION, verificationTimeout);
+        requestedActivityValidator = new RequestedActivityValidator(detectionVisualizer,
+                requestedActivities, changeThreshold, DEFAULT_HEAD_ROTATION, verificationTimeout);
 
         String activitiesNames = requestedActivities.stream()
                 .map(activity -> PossibleActivity.name(activity))
@@ -133,7 +139,19 @@ class LivenessDetector {
 
     private boolean implicitlyAlive() {
         FaceState initial = stateList.get(0);
-        return stateList.stream().skip(1).anyMatch(state -> changedSignificantly(initial, state));
+        Optional<FaceState> firstImplicitActiveState = stateList.stream()
+                .skip(1)
+                .filter(state -> changedSignificantly(initial, state))
+                .findFirst();
+        firstImplicitActiveState.ifPresent(state -> {
+            FaceState diff = FaceState.diff(initial, state);
+            detectionVisualizer.logInfo(String.format(Locale.US, IMPLICIT_ACTIVITY_LOG_FORMAT,
+                    diff.getLeftEyeOpenedProb(),
+                    diff.getRightEyeOpenedProb(),
+                    diff.getSmileProb(),
+                    diff.getHeadRotation()));
+        });
+        return firstImplicitActiveState.isPresent();
     }
 
     private boolean changedSignificantly(FaceState initial, FaceState state) {

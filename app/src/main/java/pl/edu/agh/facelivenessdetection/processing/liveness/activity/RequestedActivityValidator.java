@@ -9,8 +9,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import pl.edu.agh.facelivenessdetection.model.LivenessDetectionStatus;
+import pl.edu.agh.facelivenessdetection.visualisation.DetectionVisualizer;
 
 public class RequestedActivityValidator {
+
+    private final DetectionVisualizer detectionVisualizer;
 
     private final Duration detectionPeriod;
 
@@ -24,8 +27,9 @@ public class RequestedActivityValidator {
 
     private final float headRotationChangeThreshold;
 
-    RequestedActivityValidator(List<PossibleActivity> requestedActivities, float changeThreshold,
+    RequestedActivityValidator(DetectionVisualizer visualizer, List<PossibleActivity> requestedActivities, float changeThreshold,
                                float headRotationChangeThreshold, int timeout) {
+        this.detectionVisualizer = visualizer;
         this.requestedActivities = requestedActivities;
         this.changeThreshold = changeThreshold;
         this.headRotationChangeThreshold = headRotationChangeThreshold;
@@ -48,10 +52,12 @@ public class RequestedActivityValidator {
 
 
         if (taskCompleted && !timeExpired) {
+            detectionVisualizer.logInfo("Face is real");
             return LivenessDetectionStatus.REAL;
         }
 
         if (!taskCompleted && timeExpired) {
+            detectionVisualizer.logInfo("Face is fake");
             return LivenessDetectionStatus.FAKE;
         }
 

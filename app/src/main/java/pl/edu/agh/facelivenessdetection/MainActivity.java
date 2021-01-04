@@ -29,6 +29,8 @@ import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import pl.edu.agh.facelivenessdetection.controller.CameraManager;
 import pl.edu.agh.facelivenessdetection.handler.LoggingHandler;
@@ -66,6 +68,8 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
 
     private ArrayAdapter<String> adapter;
 
+    private final Lock loggingLock;
+
     @Nullable
     private CameraManager cameraManager;
 
@@ -76,6 +80,7 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
         statusChangeHandler = new StatusChangeHandler(this);
         loggingHandler = new LoggingHandler(this);
         logs = Lists.newArrayList();
+        loggingLock = new ReentrantLock();
     }
 
     @Override
