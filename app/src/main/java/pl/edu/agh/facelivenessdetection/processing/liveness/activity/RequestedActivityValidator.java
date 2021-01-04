@@ -37,11 +37,13 @@ public class RequestedActivityValidator {
 
     private final List<PossibleActivity> requestedActivities;
 
+    private final List<PossibleActivity> remainingActivities;
+
+    private int processedIdx = 1;
+
     private final float changeThreshold;
 
     private final float headRotationChangeThreshold;
-
-    private final Set<PossibleActivity> loggedActivities;
 
     private final Map<PossibleActivity, Float> maxActivityDiffs;
 
@@ -51,12 +53,12 @@ public class RequestedActivityValidator {
         this.detectionVisualizer = visualizer;
         this.detectionReport = detectionReport;
         this.requestedActivities = requestedActivities;
+        this.remainingActivities = Lists.newLinkedList(requestedActivities);
         this.changeThreshold = changeThreshold;
         this.headRotationChangeThreshold = headRotationChangeThreshold;
         this.detectionPeriod = Duration.ofSeconds(timeout);
         this.startTime = LocalDateTime.now();
         this.stateList = Lists.newLinkedList();
-        this.loggedActivities = Sets.newHashSet();
         this.maxActivityDiffs = Maps.newHashMap();
 
         requestedActivities.forEach(activity -> maxActivityDiffs.put(activity, 0.0f));
@@ -97,23 +99,24 @@ public class RequestedActivityValidator {
     }
 
     private boolean tasksCompleted() {
-        int idx = 1;
-        int counter = 0;
         final FaceState initial = stateList.get(0);
-        for (PossibleActivity activity : requestedActivities) {
-            for (int i = idx; i < stateList.size(); i++) {
-                if (checkActivity(activity, initial, stateList.get(i))) {
-                    idx = i + 1;
-                    counter++;
-                    if (!loggedActivities.contains(activity)) {
-                        logActivityResult(activity, initial, stateList.get(i));
-                        loggedActivities.add(activity);
-                    }
-                    break;
-                }
+
+        if (remainingActivities.size() == 0) {
+            return false;
+        }
+
+        final PossibleActivity activity = remainingActivities.get(0);
+
+        for (int i = processedIdx; i < stateList.size(); i++) {
+            if (checkActivity(activity, initial, stateList.get(i))) {
+                processedIdx = i + 1;
+                remainingActivities.remove(activity);
+                logActivityResult(activity, initial, stateList.get(i));
+                break;
             }
         }
-        return counter == requestedActivities.size();
+
+        return remainingActivities.size() == 0;
     }
 
     @SuppressLint("DefaultLocale")
