@@ -18,7 +18,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -26,7 +25,6 @@ import android.widget.Toast;
 import com.google.android.gms.common.annotation.KeepName;
 import com.google.common.collect.Lists;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.locks.Lock;
@@ -34,7 +32,6 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import pl.edu.agh.facelivenessdetection.controller.CameraManager;
 import pl.edu.agh.facelivenessdetection.handler.LoggingHandler;
-import pl.edu.agh.facelivenessdetection.persistence.ActivityDetectionStatus;
 import pl.edu.agh.facelivenessdetection.persistence.PersistenceManager;
 import pl.edu.agh.facelivenessdetection.processing.AuthWithFaceLivenessDetectMethodType;
 import pl.edu.agh.facelivenessdetection.utils.PermissionManager;

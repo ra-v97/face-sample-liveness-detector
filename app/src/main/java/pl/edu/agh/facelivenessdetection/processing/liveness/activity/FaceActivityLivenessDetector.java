@@ -17,6 +17,9 @@ import com.google.mlkit.vision.face.FaceDetectorOptions;
 import java.util.List;
 
 import pl.edu.agh.facelivenessdetection.model.LivenessDetectionStatus;
+import pl.edu.agh.facelivenessdetection.persistence.ActivityDetectionReport;
+import pl.edu.agh.facelivenessdetection.persistence.PersistenceManager;
+import pl.edu.agh.facelivenessdetection.processing.AuthWithFaceLivenessDetectMethodType;
 import pl.edu.agh.facelivenessdetection.processing.vision.BaseImageAnalyzer;
 import pl.edu.agh.facelivenessdetection.visualisation.DetectionVisualizer;
 import pl.edu.agh.facelivenessdetection.visualisation.GraphicOverlay;
@@ -28,9 +31,13 @@ public class FaceActivityLivenessDetector extends BaseImageAnalyzer<List<Face>> 
 
     private final FaceDetector detector;
 
+    private final PersistenceManager persistenceManager;
+
     private LivenessDetector livenessDetector = null;
 
     private DetectionVisualizer detectionVisualizer = null;
+
+    private ActivityDetectionReport detectionReport = null;
 
     private LivenessDetectionStatus lastStatus;
 
@@ -41,6 +48,7 @@ public class FaceActivityLivenessDetector extends BaseImageAnalyzer<List<Face>> 
         super(context, overlay, isHorizontalMode);
         Log.v(TAG, "Face detector options: " + options);
         detector = FaceDetection.getClient(options);
+        persistenceManager = new PersistenceManager(context);
     }
 
     @Override
@@ -76,13 +84,16 @@ public class FaceActivityLivenessDetector extends BaseImageAnalyzer<List<Face>> 
             lastStatus = actualStatus;
             actualStatus = livenessDetector.isAlive();
 
-            Log.i(TAG, "FACE STATE: " + actualStatus);
-
             if(lastStatus != actualStatus){
                 detectionVisualizer.visualizeStatus(actualStatus);
             }
             if(actualStatus != LivenessDetectionStatus.UNKNOWN){
                 livenessDetector = null;
+                if(detectionReport != null){
+                    detectionReport.setFinalStatus(actualStatus);
+                    persistenceManager.writeFileOnInternalStorage(detectionReport);
+                    detectionReport = null;
+                }
             }
         }
         graphicOverlay.postInvalidate();
@@ -91,13 +102,31 @@ public class FaceActivityLivenessDetector extends BaseImageAnalyzer<List<Face>> 
     @Override
     public void livenessDetectionTrigger(DetectionVisualizer visualizer) {
         Log.i(TAG, "FaceActivityLivenessDetector face liveness detection triggered");
-        livenessDetector = new LivenessDetector(visualizer,
+        detectionReport = initializeDetectionReport();
+        livenessDetector = new LivenessDetector(visualizer, detectionReport,
                 resolveThreshold(),
                 resolveActionsNumber(),
                 resolveTimeout(),
                 resolveAutoDetection(),
                 resolveAutoDetectionTimeout());
         detectionVisualizer = visualizer;
+    }
+
+    private ActivityDetectionReport initializeDetectionReport(){
+        final ActivityDetectionReport detectionReport = new ActivityDetectionReport();
+        detectionReport.setActiveMethod(AuthWithFaceLivenessDetectMethodType.FACE_ACTIVITY_METHOD);
+        detectionReport.setRequiredActionsNumber(resolveActionsNumber());
+        detectionReport.setActionRecognitionProbabilityLevel(resolveThreshold());
+        detectionReport.setAutoDetectionTimeout(resolveAutoDetectionTimeout());
+        detectionReport.setActivityVerificationTimeout(resolveTimeout());
+        detectionReport.setAutoDetectionActive(resolveAutoDetection());
+        detectionReport.setActiveTag(resolveTag());
+        return detectionReport;
+    }
+
+    private String resolveTag() {
+        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        return prefs.getString("logging_tag", "empty");
     }
 
     private int resolveActionsNumber() {

@@ -11,13 +11,14 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import pl.edu.agh.facelivenessdetection.model.LivenessDetectionStatus;
+import pl.edu.agh.facelivenessdetection.persistence.ActivityDetectionReport;
 import pl.edu.agh.facelivenessdetection.visualisation.DetectionVisualizer;
 
 
 class LivenessDetector {
 
     private static final String IMPLICIT_ACTIVITY_LOG_FORMAT = "Detection" +
-            " stats: (leftEye,%.2f) (rightEye,%.2f) (smile,%.2f) (headRotation,%.2f)";
+            " stats:\n(leftEye,%.2f)\n(rightEye,%.2f)\n(smile,%.2f)\n(headRotation,%.2f)";
 
     private static final int MIN_ACTIVITIES = 1;
 
@@ -49,12 +50,14 @@ class LivenessDetector {
 
     private final DetectionVisualizer detectionVisualizer;
 
+    private final ActivityDetectionReport detectionReport;
+
     private RequestedActivityValidator requestedActivityValidator = null;
 
-    LivenessDetector(DetectionVisualizer visualizer, float changeThreshold, int numberOfActivities,
+    LivenessDetector(DetectionVisualizer visualizer, ActivityDetectionReport detectionReport, float changeThreshold, int numberOfActivities,
                      int verificationTimeout, boolean autoDetection, int autoDetectionTimeout) {
-        detectionVisualizer = visualizer;
-
+        this.detectionVisualizer = visualizer;
+        this.detectionReport = detectionReport;
         if (numberOfActivities >= MIN_ACTIVITIES && numberOfActivities <= MAX_ACTIVITIES) {
             this.numberOfActivities = numberOfActivities;
         } else {
@@ -112,7 +115,8 @@ class LivenessDetector {
         List<PossibleActivity> requestedActivities = activitiesToPerform();
 
         requestedActivityValidator = new RequestedActivityValidator(detectionVisualizer,
-                requestedActivities, changeThreshold, DEFAULT_HEAD_ROTATION, verificationTimeout);
+                detectionReport, requestedActivities, changeThreshold, DEFAULT_HEAD_ROTATION,
+                verificationTimeout);
 
         String activitiesNames = requestedActivities.stream()
                 .map(activity -> PossibleActivity.name(activity))
@@ -145,10 +149,26 @@ class LivenessDetector {
                 .findFirst();
         firstImplicitActiveState.ifPresent(state -> {
             FaceState diff = FaceState.diff(initial, state);
+            detectionReport.addNewRecognizedAction(PossibleActivity.SMILE,
+                    Math.abs(diff.getSmileProb()));
+            detectionReport.addNewRecognizedAction(PossibleActivity.BLINK,
+                    Math.min(Math.abs(diff.getLeftEyeOpenedProb()), Math.abs(diff.getRightEyeOpenedProb())));
+            if (diff.getSmileProb() > 0) {
+                detectionReport.addNewRecognizedAction(PossibleActivity.TURN_HEAD_RIGHT,
+                        diff.getSmileProb());
+                detectionReport.addNewRecognizedAction(PossibleActivity.TURN_HEAD_LEFT,
+                        0.0f);
+            } else {
+                detectionReport.addNewRecognizedAction(PossibleActivity.TURN_HEAD_RIGHT,
+                        0.0f);
+                detectionReport.addNewRecognizedAction(PossibleActivity.TURN_HEAD_LEFT,
+                        diff.getSmileProb());
+            }
+
             detectionVisualizer.logInfo(String.format(Locale.US, IMPLICIT_ACTIVITY_LOG_FORMAT,
-                    diff.getLeftEyeOpenedProb(),
-                    diff.getRightEyeOpenedProb(),
-                    diff.getSmileProb(),
+                    Math.abs(diff.getLeftEyeOpenedProb()),
+                    Math.abs(diff.getRightEyeOpenedProb()),
+                    Math.abs(diff.getSmileProb()),
                     diff.getHeadRotation()));
         });
         return firstImplicitActiveState.isPresent();

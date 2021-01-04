@@ -47,7 +47,7 @@ public class PersistenceManager {
         return String.format(FILENAME_FORMAT, activeMethodStr);
     }
 
-    public void writeFileOnInternalStorage(ActivityDetectionStatus data) {
+    public void writeFileOnInternalStorage(ActivityDetectionReport data) {
         if (!checkIsPersistenceActive()) {
             Log.i(TAG, "Persistence is inactive");
             return;

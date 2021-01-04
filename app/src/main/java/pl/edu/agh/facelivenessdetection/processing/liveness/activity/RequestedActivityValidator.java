@@ -1,19 +1,33 @@
 package pl.edu.agh.facelivenessdetection.processing.liveness.activity;
 
+import android.annotation.SuppressLint;
 import android.util.Log;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import pl.edu.agh.facelivenessdetection.model.LivenessDetectionStatus;
+import pl.edu.agh.facelivenessdetection.persistence.ActivityDetectionReport;
 import pl.edu.agh.facelivenessdetection.visualisation.DetectionVisualizer;
 
 public class RequestedActivityValidator {
 
+    private static final String ACTIVITY_RECOGNITION_FROM_QUEST_LOG = "Found activity (q): %s\nwith probability: %.2f";
+
+    private static final String ACTIVITY_RECOGNITION_ANGLE_FROM_QUEST_LOG = "Found activity (q): %s\nwith angle: %.2f";
+
+    private static final String MAX_ACTIVITY_VALUES_LOG_FORMAT = "Max activity stat:\n(%s, %.2f)";
+
     private final DetectionVisualizer detectionVisualizer;
+
+    private final ActivityDetectionReport detectionReport;
 
     private final Duration detectionPeriod;
 
@@ -27,21 +41,32 @@ public class RequestedActivityValidator {
 
     private final float headRotationChangeThreshold;
 
-    RequestedActivityValidator(DetectionVisualizer visualizer, List<PossibleActivity> requestedActivities, float changeThreshold,
+    private final Set<PossibleActivity> loggedActivities;
+
+    private final Map<PossibleActivity, Float> maxActivityDiffs;
+
+    RequestedActivityValidator(DetectionVisualizer visualizer, ActivityDetectionReport detectionReport,
+                               List<PossibleActivity> requestedActivities, float changeThreshold,
                                float headRotationChangeThreshold, int timeout) {
         this.detectionVisualizer = visualizer;
+        this.detectionReport = detectionReport;
         this.requestedActivities = requestedActivities;
         this.changeThreshold = changeThreshold;
         this.headRotationChangeThreshold = headRotationChangeThreshold;
         this.detectionPeriod = Duration.ofSeconds(timeout);
         this.startTime = LocalDateTime.now();
         this.stateList = Lists.newLinkedList();
+        this.loggedActivities = Sets.newHashSet();
+        this.maxActivityDiffs = Maps.newHashMap();
+
+        requestedActivities.forEach(activity -> maxActivityDiffs.put(activity, 0.0f));
     }
 
     void addFaceState(FaceState state) {
         stateList.add(state);
     }
 
+    @SuppressLint("DefaultLocale")
     LivenessDetectionStatus performVerification() {
         if (stateList.size() < requestedActivities.size()) {
             return LivenessDetectionStatus.UNKNOWN;
@@ -50,22 +75,25 @@ public class RequestedActivityValidator {
         final boolean taskCompleted = tasksCompleted();
         final boolean timeExpired = timeExpired();
 
-
         if (taskCompleted && !timeExpired) {
             detectionVisualizer.logInfo("Face is real");
+            requestedActivities.forEach(activity ->
+                    detectionReport.addNewRecognizedAction(activity, maxActivityDiffs.get(activity)));
             return LivenessDetectionStatus.REAL;
         }
 
-        if (!taskCompleted && timeExpired) {
+        if (timeExpired) {
+            requestedActivities.forEach(activity -> {
+                detectionReport.addNewRecognizedAction(activity, maxActivityDiffs.get(activity));
+                detectionVisualizer
+                        .logInfo(String.format(MAX_ACTIVITY_VALUES_LOG_FORMAT, activity.toString(),
+                                maxActivityDiffs.get(activity)));
+            });
             detectionVisualizer.logInfo("Face is fake");
             return LivenessDetectionStatus.FAKE;
         }
 
-        if(timeExpired){
-            return LivenessDetectionStatus.FAKE;
-        }
-
-         return LivenessDetectionStatus.UNKNOWN;
+        return LivenessDetectionStatus.UNKNOWN;
     }
 
     private boolean tasksCompleted() {
@@ -77,6 +105,10 @@ public class RequestedActivityValidator {
                 if (checkActivity(activity, initial, stateList.get(i))) {
                     idx = i + 1;
                     counter++;
+                    if (!loggedActivities.contains(activity)) {
+                        logActivityResult(activity, initial, stateList.get(i));
+                        loggedActivities.add(activity);
+                    }
                     break;
                 }
             }
@@ -84,40 +116,81 @@ public class RequestedActivityValidator {
         return counter == requestedActivities.size();
     }
 
-    private boolean checkActivity(PossibleActivity activity, FaceState initial, FaceState state) {
+    @SuppressLint("DefaultLocale")
+    private void logActivityResult(PossibleActivity activity, FaceState initial, FaceState state) {
+        final FaceState diff = FaceState.diff(initial, state);
         switch (activity) {
             case SMILE:
-                return smiled(initial, state);
+                final float smileDiff = Math.abs(diff.getSmileProb());
+                detectionVisualizer
+                        .logInfo(String.format(ACTIVITY_RECOGNITION_FROM_QUEST_LOG,
+                                activity.toString(), smileDiff));
+                //detectionReport.addNewRecognizedAction(PossibleActivity.SMILE, smileDiff);
+                break;
             case BLINK:
-                return blinked(initial, state);
+                final float blinkDiff = Math.min(Math.abs(diff.getLeftEyeOpenedProb()),
+                        Math.abs(diff.getRightEyeOpenedProb()));
+                detectionVisualizer
+                        .logInfo(String.format(ACTIVITY_RECOGNITION_FROM_QUEST_LOG,
+                                activity.toString(), blinkDiff));
+                //detectionReport.addNewRecognizedAction(PossibleActivity.BLINK, blinkDiff);
+                break;
+
             case TURN_HEAD_LEFT:
-                return turnedHeadLeft(initial, state);
             case TURN_HEAD_RIGHT:
-                return turnedHeadRight(initial, state);
+                detectionVisualizer
+                        .logInfo(String.format(ACTIVITY_RECOGNITION_ANGLE_FROM_QUEST_LOG,
+                                activity.toString(), Math.abs(diff.getHeadRotation())));
+                //detectionReport.addNewRecognizedAction(activity, diff.getHeadRotation());
+        }
+    }
+
+    private boolean checkActivity(PossibleActivity activity, FaceState initial, FaceState state) {
+        final FaceState diff = FaceState.diff(initial, state);
+        switch (activity) {
+            case SMILE:
+                return smiled(diff);
+            case BLINK:
+                return blinked(diff);
+            case TURN_HEAD_LEFT:
+                return turnedHeadLeft(diff);
+            case TURN_HEAD_RIGHT:
+                return turnedHeadRight(diff);
         }
         return false;
     }
 
-    private boolean blinked(FaceState initial, FaceState state) {
-        FaceState diff = FaceState.diff(initial, state);
-        return (Math.abs(diff.getLeftEyeOpenedProb()) > changeThreshold && Math.abs(diff.getRightEyeOpenedProb()) > changeThreshold);
+    private boolean blinked(FaceState diff) {
+        final float blinkProb = Math.min(Math.abs(diff.getLeftEyeOpenedProb()),
+                Math.abs(diff.getRightEyeOpenedProb()));
+        if (maxActivityDiffs.get(PossibleActivity.BLINK) < blinkProb) {
+            maxActivityDiffs.put(PossibleActivity.BLINK, blinkProb);
+        }
+        return blinkProb > changeThreshold;
     }
 
-    private boolean smiled(FaceState initial, FaceState state) {
-        FaceState diff = FaceState.diff(initial, state);
-        return Math.abs(diff.getSmileProb()) > changeThreshold;
+    private boolean smiled(FaceState diff) {
+        final float smiledProb = Math.abs(diff.getSmileProb());
+        if (maxActivityDiffs.get(PossibleActivity.SMILE) < smiledProb) {
+            maxActivityDiffs.put(PossibleActivity.SMILE, smiledProb);
+        }
+        return smiledProb > changeThreshold;
     }
 
-    private boolean turnedHeadLeft(FaceState initial, FaceState state) {
-        FaceState diff = FaceState.diff(initial, state);
-        Log.d("HEAD_TURN", "Turned head left: " + diff.getHeadRotation());
-        return diff.getHeadRotation() < -headRotationChangeThreshold;
+    private boolean turnedHeadLeft(FaceState diff) {
+        final float headRotation = Math.abs(diff.getHeadRotation());
+        if (maxActivityDiffs.get(PossibleActivity.TURN_HEAD_LEFT) < headRotation) {
+            maxActivityDiffs.put(PossibleActivity.TURN_HEAD_LEFT, headRotation);
+        }
+        return headRotation > headRotationChangeThreshold;
     }
 
-    private boolean turnedHeadRight(FaceState initial, FaceState state) {
-        FaceState diff = FaceState.diff(initial, state);
-        Log.d("HEAD_TURN", "Turned head right: " + diff.getHeadRotation());
-        return diff.getHeadRotation() > headRotationChangeThreshold;
+    private boolean turnedHeadRight(FaceState diff) {
+        final float headRotation = Math.abs(diff.getHeadRotation());
+        if (maxActivityDiffs.get(PossibleActivity.TURN_HEAD_RIGHT) < headRotation) {
+            maxActivityDiffs.put(PossibleActivity.TURN_HEAD_RIGHT, headRotation);
+        }
+        return headRotation > headRotationChangeThreshold;
     }
 
     private boolean timeExpired() {
