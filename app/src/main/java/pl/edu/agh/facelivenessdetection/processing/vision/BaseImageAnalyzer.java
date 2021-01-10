@@ -57,7 +57,6 @@ public abstract class BaseImageAnalyzer<T> implements ImageAnalysis.Analyzer, Fa
         Optional.ofNullable(mediaImage)
                 .ifPresent(img -> {
                     monitor.notifyDetectionStart();
-                    System.out.println();
                     final Task<T> tTask = detectInImage(InputImage.fromMediaImage(img, imageProxy.getImageInfo().getRotationDegrees()), img);
                     tTask.addOnSuccessListener(result -> {
                         onSuccess(result);
