@@ -18,12 +18,14 @@ public class SpoofingDetection {
     Context context;
     ImagePreparation imagePreparation;
     SVMClassifier svmClassifier;
+    FaceEyesDetection faceEyesDetection;
 
 
     public SpoofingDetection(Context context){
         this.context = context;
         imagePreparation = new ImagePreparation();
         svmClassifier = new SVMClassifier();
+        faceEyesDetection = new FaceEyesDetection(context);
     }
 
     public float predict(Bitmap bitmapFlash, Bitmap bitmapBackground) {
@@ -32,10 +34,12 @@ public class SpoofingDetection {
             return (float) 0.0;
         }
 
-        try {
-            svmClassifier.load(context, "trained_svm.xml");
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (!svmClassifier.isSVMLoaded()) {
+            try {
+                svmClassifier.load(context, "trained_svm2.xml");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
         Mat flash = imagePreparation.bitmapToMat(bitmapFlash);
@@ -47,6 +51,8 @@ public class SpoofingDetection {
 
 
         Mat descriptor = getFaceDescriptor(flash, background);
+        System.out.println("DESCRIPTOR:");
+        System.out.println(descriptor);
         if (descriptor == null) {
             return (float) 0.0;
         }
@@ -60,13 +66,9 @@ public class SpoofingDetection {
 
         // ewentualny obrot
 
-        ImagePreparation imagePreparation = new ImagePreparation();
-
-
         flash = imagePreparation.applyGrayFilter(flash);
         background = imagePreparation.applyGrayFilter(background);
 
-        FaceEyesDetection faceEyesDetection = new FaceEyesDetection(context);
         Mat faceFlash = faceEyesDetection.cut_face(flash);
         Map flashEyes = faceEyesDetection.detect_eyes(flash);
         if (flashEyes.get("LEFT") == null || flashEyes.get("RIGHT") == null) {

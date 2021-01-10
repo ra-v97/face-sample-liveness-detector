@@ -34,10 +34,14 @@ public class SVMClassifier {
 
     }
 
+    public boolean isSVMLoaded() {
+        return svm != null;
+    }
+
     public void load(Context context, String file) throws IOException {
 
 
-        InputStream is = context.getResources().openRawResource(R.raw.trained_svm);
+        InputStream is = context.getResources().openRawResource(R.raw.trained_svm2);
         File cascadeDir = context.getDir("cascade", Context.MODE_PRIVATE);
         File mCascadeFile = new File(cascadeDir, "trained_svm.xml");
         FileOutputStream os = new FileOutputStream(mCascadeFile);

@@ -34,6 +34,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import pl.edu.agh.facelivenessdetection.model.LivenessDetectionStatus;
 import pl.edu.agh.facelivenessdetection.processing.vision.BaseImageAnalyzer;
 import pl.edu.agh.facelivenessdetection.utils.BitmapUtils;
 import pl.edu.agh.facelivenessdetection.visualisation.DetectionVisualizer;
@@ -44,6 +45,8 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<Pair<Image, 
     private static final String TAG = "FaceDetectorProcessor";
 
     private final FaceDetector detector;
+    DetectionVisualizer visualizer;
+    private SpoofingDetection spoofingDetection;
     private boolean triggered = false;
 
 
@@ -52,11 +55,13 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<Pair<Image, 
         super(context, overlay, isHorizontalMode);
         Log.v(TAG, "Face detector options: " + options);
         detector = FaceDetection.getClient(options);
+        spoofingDetection = new SpoofingDetection(context);
     }
 
     @Override
     public void livenessDetectionTrigger(DetectionVisualizer visualizer) {
         Log.i(TAG, "Method triggered");
+        this.visualizer = visualizer;
         triggered = true;
 
 //        Bitmap bitmapFlash = BitmapFactory.decodeResource(getContext().getResources(), R.drawable.f1);
@@ -109,6 +114,18 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<Pair<Image, 
                 result.first.getWidth(), result.first.getHeight());
 
         Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+
+        float prediction = spoofingDetection.predict(bitmap, bitmap);
+
+        if (visualizer != null) {
+            if (prediction == -1.0) {
+                visualizer.visualizeStatus(LivenessDetectionStatus.REAL);
+            } else if (prediction == 1.0) {
+                visualizer.visualizeStatus(LivenessDetectionStatus.FAKE);
+            } else {
+                visualizer.visualizeStatus(LivenessDetectionStatus.UNKNOWN);
+            }
+        }
 
 //        result.forEach(res -> {
 //            // TODO Check rect param
