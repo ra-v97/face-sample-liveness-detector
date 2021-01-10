@@ -24,6 +24,7 @@ import com.google.mlkit.vision.face.FaceDetection;
 import com.google.mlkit.vision.face.FaceDetector;
 import com.google.mlkit.vision.face.FaceDetectorOptions;
 
+import org.opencv.core.CvException;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.imgcodecs.Imgcodecs;
@@ -47,7 +48,9 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<Pair<Image, 
     private final FaceDetector detector;
     DetectionVisualizer visualizer;
     private SpoofingDetection spoofingDetection;
+    private Image img_save1;
     private boolean performDetection = false;
+    private List<byte[]> image_list;
 
 
     public FaceFlashingLivenessDetector(Context context, GraphicOverlay overlay, boolean isHorizontalMode,
@@ -56,6 +59,8 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<Pair<Image, 
         Log.v(TAG, "Face detector options: " + options);
         detector = FaceDetection.getClient(options);
         spoofingDetection = new SpoofingDetection(context);
+        image_list = new LinkedList<byte[]>();
+
     }
 
     @Override
@@ -104,6 +109,11 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<Pair<Image, 
 
     @Override
     protected void onSuccess(Pair<Image, Image> result) {
+        if(image_list.size() < 10){
+            image_list.add(NV21toJPEG(
+                    YUV_420_888toNV21(result.first),
+                    result.first.getWidth(), result.first.getHeight()));
+        }
         if (!performDetection) {
             return;
         }
@@ -119,8 +129,14 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<Pair<Image, 
                 result.first.getWidth(), result.first.getHeight());
 
         Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+        Bitmap bitmap2 = BitmapFactory.decodeByteArray(image_list.get(0), 0, image_list.get(0).length);
 
-        float prediction = spoofingDetection.predict(bitmap, bitmap);
+        float prediction;
+        try{
+            prediction = spoofingDetection.predict(bitmap, bitmap2);
+        } catch (CvException cvException){
+            return;
+        }
 
         if (visualizer != null) {
             if (prediction == -1.0) {
@@ -131,6 +147,8 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<Pair<Image, 
                 visualizer.visualizeStatus(LivenessDetectionStatus.UNKNOWN);
             }
         }
+
+        image_list.clear();
 
 //        result.forEach(res -> {
 //            // TODO Check rect param
