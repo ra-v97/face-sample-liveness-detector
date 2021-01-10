@@ -34,6 +34,22 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<List<Face>> 
     @Override
     public void livenessDetectionTrigger(DetectionVisualizer visualizer) {
         Log.i(TAG, "Method triggered");
+
+//        ImagePreparation imagePreparation = new ImagePreparation();
+//        Bitmap bitmapFlash = BitmapFactory.decodeResource(getContext().getResources(), R.drawable.f1);
+//        Bitmap bitmapBackground = BitmapFactory.decodeResource(getContext().getResources(), R.drawable.b1);
+
+//        SpoofingDetection spoofingDetection = new SpoofingDetection(getContext());
+//        float prediction = spoofingDetection.predict(bitmapFlash, bitmapBackground);
+//        float prediction = 0;
+
+//        if (prediction == -1) {
+//            visualizer.visualizeStatus(LivenessDetectionStatus.REAL);
+//        } else if (prediction == 1) {
+//            visualizer.visualizeStatus(LivenessDetectionStatus.FAKE);
+//        } else {
+//            visualizer.visualizeStatus(LivenessDetectionStatus.UNKNOWN);
+//        }
     }
 
     @Override

@@ -25,6 +25,8 @@ import android.widget.Toast;
 import com.google.android.gms.common.annotation.KeepName;
 import com.google.common.collect.Lists;
 
+import org.opencv.android.OpenCVLoader;
+
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.locks.Lock;
@@ -107,6 +109,12 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
         createCameraManager();
         createPersistenceManager();
         setUpViewModelProvider();
+
+        if (!OpenCVLoader.initDebug()) {
+            Log.e("OpenCV", "Unable to load OpenCV");
+        } else {
+            Log.d("OpenCV", "OpenCV loaded");
+        }
     }
 
     @Override
