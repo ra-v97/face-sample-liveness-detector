@@ -2,6 +2,7 @@ package pl.edu.agh.facelivenessdetection.processing.liveness.activity;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.media.Image;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -62,7 +63,7 @@ public class FaceActivityLivenessDetector extends BaseImageAnalyzer<List<Face>> 
     }
 
     @Override
-    protected Task<List<Face>> detectInImage(InputImage image) {
+    protected Task<List<Face>> detectInImage(InputImage image, Image img) {
         return detector.process(image);
     }
 

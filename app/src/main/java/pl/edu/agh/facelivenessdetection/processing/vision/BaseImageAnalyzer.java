@@ -3,7 +3,11 @@ package pl.edu.agh.facelivenessdetection.processing.vision;
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.ImageFormat;
 import android.graphics.Rect;
+import android.graphics.YuvImage;
 import android.media.Image;
 
 import androidx.camera.core.CameraSelector;
@@ -14,6 +18,8 @@ import androidx.preference.PreferenceManager;
 import com.google.android.gms.tasks.Task;
 import com.google.mlkit.vision.common.InputImage;
 
+import java.io.ByteArrayOutputStream;
+import java.nio.ByteBuffer;
 import java.util.Optional;
 
 import pl.edu.agh.facelivenessdetection.preference.SharedPreferences;
@@ -51,7 +57,8 @@ public abstract class BaseImageAnalyzer<T> implements ImageAnalysis.Analyzer, Fa
         Optional.ofNullable(mediaImage)
                 .ifPresent(img -> {
                     monitor.notifyDetectionStart();
-                    final Task<T> tTask = detectInImage(InputImage.fromMediaImage(img, imageProxy.getImageInfo().getRotationDegrees()));
+                    System.out.println();
+                    final Task<T> tTask = detectInImage(InputImage.fromMediaImage(img, imageProxy.getImageInfo().getRotationDegrees()), img);
                     tTask.addOnSuccessListener(result -> {
                         onSuccess(result);
                         graphicOverlay.add(new InferenceInfoGraphic(graphicOverlay,
@@ -98,7 +105,7 @@ public abstract class BaseImageAnalyzer<T> implements ImageAnalysis.Analyzer, Fa
         monitor.stopTimer();
     }
 
-    protected abstract Task<T> detectInImage(InputImage image);
+    protected abstract Task<T> detectInImage(InputImage image, Image img);
 
     protected abstract void onSuccess(T result);
 
