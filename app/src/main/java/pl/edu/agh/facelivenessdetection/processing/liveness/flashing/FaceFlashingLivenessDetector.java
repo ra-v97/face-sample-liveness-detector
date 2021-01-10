@@ -47,7 +47,6 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<Pair<Image, 
     private final FaceDetector detector;
     DetectionVisualizer visualizer;
     private SpoofingDetection spoofingDetection;
-    private boolean triggered = false;
     private boolean performDetection = false;
 
 
@@ -63,7 +62,6 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<Pair<Image, 
     public void livenessDetectionTrigger(DetectionVisualizer visualizer) {
         Log.i(TAG, "Method triggered");
         this.visualizer = visualizer;
-        triggered = true;
         performDetection = true;
 
 //        Bitmap bitmapFlash = BitmapFactory.decodeResource(getContext().getResources(), R.drawable.f1);
@@ -109,6 +107,7 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<Pair<Image, 
         if (!performDetection) {
             return;
         }
+        performDetection = false;
 
         final GraphicOverlay graphicOverlay = getGraphicOverlay();
         graphicOverlay.clear();
@@ -126,10 +125,8 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<Pair<Image, 
         if (visualizer != null) {
             if (prediction == -1.0) {
                 visualizer.visualizeStatus(LivenessDetectionStatus.REAL);
-                performDetection = false;
             } else if (prediction == 1.0) {
                 visualizer.visualizeStatus(LivenessDetectionStatus.FAKE);
-                performDetection = false;
             } else {
                 visualizer.visualizeStatus(LivenessDetectionStatus.UNKNOWN);
             }
