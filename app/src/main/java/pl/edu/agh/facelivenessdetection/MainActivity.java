@@ -17,7 +17,9 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -33,6 +35,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import pl.edu.agh.facelivenessdetection.controller.CameraManager;
+import pl.edu.agh.facelivenessdetection.handler.FlashHandler;
 import pl.edu.agh.facelivenessdetection.handler.LoggingHandler;
 import pl.edu.agh.facelivenessdetection.persistence.PersistenceManager;
 import pl.edu.agh.facelivenessdetection.processing.AuthWithFaceLivenessDetectMethodType;
@@ -42,6 +45,9 @@ import pl.edu.agh.facelivenessdetection.visualisation.GraphicOverlay;
 import pl.edu.agh.facelivenessdetection.handler.StatusChangeHandler;
 import pl.edu.agh.facelivenessdetection.model.LivenessDetectionStatus;
 import pl.edu.agh.facelivenessdetection.visualisation.DetectionVisualizer;
+
+import static android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL;
+import static android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE;
 
 @KeepName
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
@@ -57,11 +63,15 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
 
     private PreviewView previewView;
 
+    private ImageView flashView;
+
     private GraphicOverlay graphicOverlay;
 
     private final StatusChangeHandler statusChangeHandler;
 
     private final LoggingHandler loggingHandler;
+
+    private final FlashHandler flashHandler;
 
     private final List<String> logs;
 
@@ -78,6 +88,7 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
     public MainActivity() {
         statusChangeHandler = new StatusChangeHandler(this);
         loggingHandler = new LoggingHandler(this);
+        flashHandler = new FlashHandler(this);
         logs = Lists.newArrayList();
         loggingLock = new ReentrantLock();
     }
@@ -97,6 +108,10 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
         if (previewView == null) {
             Log.d(TAG, "Preview is null");
         }
+
+        flashView = findViewById(R.id.flashView);
+        System.out.println(flashView);
+
         graphicOverlay = findViewById(R.id.graphic_overlay);
         if (graphicOverlay == null) {
             Log.d(TAG, "graphicOverlay is null");
@@ -115,6 +130,8 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
         } else {
             Log.d("OpenCV", "OpenCV loaded");
         }
+
+//        startFlashActivity();
     }
 
     @Override
@@ -134,6 +151,40 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+//    public void startFlashActivity() {
+//        final Intent flashStartIntent = new Intent(MainActivity.this, FlashActivity.class);
+//        MainActivity.this.startActivity(flashStartIntent);
+//    }
+
+    public void startFrontFlashEmulator() {
+        System.out.println("Emulate front flash");
+        flashView.setVisibility(View.VISIBLE);
+        System.out.println("VISIBILITY: " + flashView.getVisibility());
+        flashView.bringToFront();
+
+        WindowManager.LayoutParams attributes = getWindow().getAttributes();
+        attributes.screenBrightness = BRIGHTNESS_OVERRIDE_FULL;
+        getWindow().setAttributes(attributes);
+    }
+
+    public void stopFrontFlashEmulator() {
+        System.out.println("Stop emulate front flash");
+        flashView.setVisibility(View.INVISIBLE);
+        System.out.println("VISIBILITY: " + flashView.getVisibility());
+
+        WindowManager.LayoutParams attributes = getWindow().getAttributes();
+        attributes.screenBrightness = BRIGHTNESS_OVERRIDE_NONE;
+        getWindow().setAttributes(attributes);
+    }
+
+    public void setFlashStatus(String status) {
+        final Message msg = flashHandler.obtainMessage();
+        final Bundle b = new Bundle();
+        b.putString("STATUS", status);
+        msg.setData(b);
+        flashHandler.sendMessage(msg);
     }
 
     private void createCameraManager() {
