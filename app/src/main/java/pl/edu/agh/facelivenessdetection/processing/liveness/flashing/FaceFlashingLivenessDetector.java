@@ -55,8 +55,8 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<Pair<Image, 
 //    private List<byte[]> image_list;
     private boolean takeBackgroundPhoto;
     private boolean takeFlashPhoto;
-    private Image backgroundImage;
-    private Image flashImage;
+    private byte[] backgroundImage;
+    private byte[] flashImage;
 
 
     public FaceFlashingLivenessDetector(Context context, GraphicOverlay overlay, boolean isHorizontalMode,
@@ -147,14 +147,18 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<Pair<Image, 
         Image image = result.first;
 
         if (takeBackgroundPhoto) {
-            backgroundImage = image;
+            backgroundImage = NV21toJPEG(
+                    YUV_420_888toNV21(result.first),
+                    result.first.getWidth(), result.first.getHeight());
             takeBackgroundPhoto = false;
             System.out.println("Back photo taken");
         }
         else if (takeFlashPhoto) {
             performDetection = false;
 
-            flashImage = image;
+            flashImage = NV21toJPEG(
+                    YUV_420_888toNV21(result.first),
+                    result.first.getWidth(), result.first.getHeight());
             takeFlashPhoto = false;
 
             System.out.println("Flash photo taken");
@@ -162,13 +166,15 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<Pair<Image, 
             final GraphicOverlay graphicOverlay = getGraphicOverlay();
             graphicOverlay.clear();
 
-            Bitmap flashBitmap = imageToBitmap(flashImage);
-            Bitmap backgroundBitmap = imageToBitmap(backgroundImage);
+
+            Bitmap flashBitmap = BitmapFactory.decodeByteArray(flashImage, 0, flashImage.length);
+            Bitmap backgroundBitmap = BitmapFactory.decodeByteArray(backgroundImage, 0, backgroundImage.length);
 
             float prediction;
             try{
                 prediction = spoofingDetection.predict(flashBitmap, backgroundBitmap);
             } catch (CvException cvException){
+                cvException.printStackTrace();
                 return;
             }
 
