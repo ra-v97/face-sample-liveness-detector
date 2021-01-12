@@ -42,7 +42,7 @@ import pl.edu.agh.facelivenessdetection.utils.BitmapUtils;
 import pl.edu.agh.facelivenessdetection.visualisation.DetectionVisualizer;
 import pl.edu.agh.facelivenessdetection.visualisation.GraphicOverlay;
 
-public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<Pair<Image, Image>> {
+public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<Image> {
 
     private static final String TAG = "FaceDetectorProcessor";
 
@@ -100,11 +100,10 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<Pair<Image, 
     }
 
     @Override
-    protected Task<Pair<Image, Image>> detectInImage(InputImage image, Image img) {
-
-        return Tasks.call(new Callable<Pair<Image, Image>>() {
+    protected Task<Image> detectInImage(InputImage image, Image img) {
+        return Tasks.call(new Callable<Image>() {
             @Override
-            public Pair<Image, Image> call() throws Exception {
+            public Image call() throws Exception {
                 if (performDetection) {
                     MainActivity mainActivity = (MainActivity) getContext();
                     mainActivity.setFlashStatus("ON");
@@ -114,7 +113,7 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<Pair<Image, 
                         e.printStackTrace();
                     }
                 }
-                return new Pair(img, img);
+                return img;
             }
         });
 //        return detector.process(image);
@@ -125,24 +124,23 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<Pair<Image, 
                 YUV_420_888toNV21(image),
                 image.getWidth(),
                 image.getHeight());
-
         return BitmapFactory.decodeByteArray(data, 0, data.length);
     }
 
     @Override
-    protected void onSuccess(Pair<Image, Image> result) {
+    protected void onSuccess(Image img) {
         if(image_list.size() < 10){
             image_list.add(NV21toJPEG(
-                    YUV_420_888toNV21(result.first),
-                    result.first.getWidth(), result.first.getHeight()));
+                    YUV_420_888toNV21(img),
+                    img.getWidth(), img.getHeight()));
         }
 
         if (!performDetection) {
             return;
         }
         byte[] flashImage = NV21toJPEG(
-                YUV_420_888toNV21(result.first),
-                result.first.getWidth(), result.first.getHeight());
+                YUV_420_888toNV21(img),
+                img.getWidth(), img.getHeight());
         byte[] backgroundImage = image_list.get(0);
         System.out.println("Flash photo taken");
         final GraphicOverlay graphicOverlay = getGraphicOverlay();
