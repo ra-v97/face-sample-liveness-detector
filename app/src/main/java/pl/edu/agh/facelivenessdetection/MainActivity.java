@@ -200,9 +200,9 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
 
         }
         ScreenBrightness(255,getApplicationContext());
-        WindowManager.LayoutParams attributes = getWindow().getAttributes();
-        attributes.screenBrightness = BRIGHTNESS_OVERRIDE_FULL;
-        getWindow().setAttributes(attributes);
+//        WindowManager.LayoutParams attributes = getWindow().getAttributes();
+//        attributes.screenBrightness = BRIGHTNESS_OVERRIDE_FULL;
+//        getWindow().setAttributes(attributes);
     }
 
     private boolean ScreenBrightness(int level, Context context) {
@@ -228,13 +228,14 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
     }
 
     public void stopFrontFlashEmulator() {
-        System.out.println("Stop emulate front flash");
-        flashView.setVisibility(View.INVISIBLE);
-        System.out.println("VISIBILITY: " + flashView.getVisibility());
+//        System.out.println("Stop emulate front flash");
+//        flashView.setVisibility(View.INVISIBLE);
+//        System.out.println("VISIBILITY: " + flashView.getVisibility());
+        ScreenBrightness(0,getApplicationContext());
 
-        WindowManager.LayoutParams attributes = getWindow().getAttributes();
-        attributes.screenBrightness = BRIGHTNESS_OVERRIDE_NONE;
-        getWindow().setAttributes(attributes);
+//        WindowManager.LayoutParams attributes = getWindow().getAttributes();
+//        attributes.screenBrightness = BRIGHTNESS_OVERRIDE_NONE;
+//        getWindow().setAttributes(attributes);
     }
 
     public void setFlashStatus(String status) {
