@@ -116,7 +116,6 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<Pair<Image, 
                     mainActivity.setFlashStatus("ON");
                     takeFlashPhoto = true;
                     System.out.println("Take flash photo");
-                    Thread.sleep(5000);
                     mainActivity.setFlashStatus("OFF");
                     takeFlashPhoto = false;
                     System.out.println("Dont take flash photo");
@@ -185,7 +184,6 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<Pair<Image, 
 
             graphicOverlay.postInvalidate();
         }
-
 
 
 //        image_list.clear();

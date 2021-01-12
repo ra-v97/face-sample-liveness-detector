@@ -31,4 +31,5 @@
     <string name="logging_active_switch_label">Logging active</string>
     <string name="logging_tag_label">Logging Tag</string>
     <string name="probability_threshold_label">Probability threshold (in %)</string>
+    <string name="flashimage">flashImage</string>
 </resources>

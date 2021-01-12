@@ -8,11 +8,14 @@ import androidx.camera.view.PreviewView;
 import androidx.preference.PreferenceManager;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Message;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -110,7 +113,9 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
         }
 
         flashView = findViewById(R.id.flashView);
-        System.out.println(flashView);
+        if(flashView == null){
+            Log.d(TAG, "flashView is null");
+        }
 
         graphicOverlay = findViewById(R.id.graphic_overlay);
         if (graphicOverlay == null) {
@@ -164,9 +169,62 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
         System.out.println("VISIBILITY: " + flashView.getVisibility());
         flashView.bringToFront();
 
+        if(Settings.System.canWrite(getApplicationContext())){
+            System.out.println("CAN WRITE ->");
+        } else{
+            System.out.println("CANNOT WRITE");
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS);
+                intent.setData(Uri.parse("package:" + getPackageName()));
+                startActivity(intent);
+            }
+
+//            Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_WRITE_SETTINGS);
+//            intent.setData(Uri.parse("package:" + this.getPackageName()));
+//            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//            startActivity(intent);
+
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//                boolean retVal = true;
+//                retVal = Settings.System.canWrite(this);
+//                if (retVal == false) {
+//                    if (!Settings.System.canWrite(getApplicationContext())) {
+//                        Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:" + getPackageName()));
+//                        Toast.makeText(getApplicationContext(), "Please, allow system settings for automatic logout ", Toast.LENGTH_LONG).show();
+//                        startActivity(intent);
+//                    }
+//                }else {
+//                    Toast.makeText(getApplicationContext(), "You are not allowed to wright ", Toast.LENGTH_LONG).show();
+//                }
+//            }
+
+        }
+        ScreenBrightness(255,getApplicationContext());
         WindowManager.LayoutParams attributes = getWindow().getAttributes();
         attributes.screenBrightness = BRIGHTNESS_OVERRIDE_FULL;
         getWindow().setAttributes(attributes);
+    }
+
+    private boolean ScreenBrightness(int level, Context context) {
+        try {
+            android.provider.Settings.System.putInt(
+                    context.getContentResolver(),
+                    android.provider.Settings.System.SCREEN_BRIGHTNESS, level);
+            android.provider.Settings.System.putInt(context.getContentResolver(),
+                    android.provider.Settings.System.SCREEN_BRIGHTNESS_MODE,
+                    android.provider.Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL);
+            android.provider.Settings.System.putInt(
+                    context.getContentResolver(),
+                    android.provider.Settings.System.SCREEN_BRIGHTNESS,
+                    level);
+            return true;
+        }
+
+        catch (Exception e) {
+            Log.e("Screen Brightness", "error changing screen brightness");
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public void stopFrontFlashEmulator() {
@@ -180,6 +238,7 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
     }
 
     public void setFlashStatus(String status) {
+        System.out.println("->"+status);
         final Message msg = flashHandler.obtainMessage();
         final Bundle b = new Bundle();
         b.putString("STATUS", status);
