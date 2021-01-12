@@ -55,9 +55,7 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<Pair<Image, 
 //    private List<byte[]> image_list;
     private boolean takeBackgroundPhoto;
     private boolean takeFlashPhoto;
-    private byte[] backgroundImage;
-    private byte[] flashImage;
-
+    private List<byte[]> image_list;
 
     public FaceFlashingLivenessDetector(Context context, GraphicOverlay overlay, boolean isHorizontalMode,
                                         FaceDetectorOptions options) {
@@ -65,7 +63,7 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<Pair<Image, 
         Log.v(TAG, "Face detector options: " + options);
         detector = FaceDetection.getClient(options);
         spoofingDetection = new SpoofingDetection(context);
-//        image_list = new LinkedList<byte[]>();
+        image_list = new LinkedList<byte[]>();
 
     }
 
@@ -74,7 +72,6 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<Pair<Image, 
         Log.i(TAG, "Method triggered");
         this.visualizer = visualizer;
         performDetection = true;
-        takeBackgroundPhoto = true;
 
 //        Bitmap bitmapFlash = BitmapFactory.decodeResource(getContext().getResources(), R.drawable.f1);
 //        Bitmap bitmapBackground = BitmapFactory.decodeResource(getContext().getResources(), R.drawable.b1);
@@ -108,20 +105,15 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<Pair<Image, 
         return Tasks.call(new Callable<Pair<Image, Image>>() {
             @Override
             public Pair<Image, Image> call() throws Exception {
-
                 if (performDetection) {
-                    performDetection = false;
-
                     MainActivity mainActivity = (MainActivity) getContext();
                     mainActivity.setFlashStatus("ON");
-                    takeFlashPhoto = true;
-                    System.out.println("Take flash photo");
-                    mainActivity.setFlashStatus("OFF");
-                    takeFlashPhoto = false;
-                    System.out.println("Dont take flash photo");
-
+                    try {
+                        Thread.sleep(200);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
-
                 return new Pair(img, img);
             }
         });
@@ -139,67 +131,58 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<Pair<Image, 
 
     @Override
     protected void onSuccess(Pair<Image, Image> result) {
-//        if(image_list.size() < 10){
-//            image_list.add(NV21toJPEG(
-//                    YUV_420_888toNV21(result.first),
-//                    result.first.getWidth(), result.first.getHeight()));
-//        }
-        Image image = result.first;
-
-        if (takeBackgroundPhoto) {
-            backgroundImage = NV21toJPEG(
+        if(image_list.size() < 10){
+            image_list.add(NV21toJPEG(
                     YUV_420_888toNV21(result.first),
-                    result.first.getWidth(), result.first.getHeight());
-            takeBackgroundPhoto = false;
-            System.out.println("Back photo taken");
-        }
-        else if (takeFlashPhoto) {
-            performDetection = false;
-
-            flashImage = NV21toJPEG(
-                    YUV_420_888toNV21(result.first),
-                    result.first.getWidth(), result.first.getHeight());
-            takeFlashPhoto = false;
-
-            System.out.println("Flash photo taken");
-
-            final GraphicOverlay graphicOverlay = getGraphicOverlay();
-            graphicOverlay.clear();
-
-
-            Bitmap flashBitmap = BitmapFactory.decodeByteArray(flashImage, 0, flashImage.length);
-            Bitmap backgroundBitmap = BitmapFactory.decodeByteArray(backgroundImage, 0, backgroundImage.length);
-
-            float prediction;
-            try{
-                prediction = spoofingDetection.predict(flashBitmap, backgroundBitmap);
-            } catch (CvException cvException){
-                cvException.printStackTrace();
-                return;
-            }
-
-            if (visualizer != null) {
-                if (prediction == -1.0) {
-                    visualizer.visualizeStatus(LivenessDetectionStatus.REAL);
-                } else if (prediction == 1.0) {
-                    visualizer.visualizeStatus(LivenessDetectionStatus.FAKE);
-                } else {
-                    visualizer.visualizeStatus(LivenessDetectionStatus.UNKNOWN);
-                }
-            }
-
-            graphicOverlay.postInvalidate();
+                    result.first.getWidth(), result.first.getHeight()));
         }
 
+        if (!performDetection) {
+            return;
+        }
+        byte[] flashImage = NV21toJPEG(
+                YUV_420_888toNV21(result.first),
+                result.first.getWidth(), result.first.getHeight());
+        byte[] backgroundImage = image_list.get(0);
+        System.out.println("Flash photo taken");
+        final GraphicOverlay graphicOverlay = getGraphicOverlay();
+        graphicOverlay.clear();
 
-//        image_list.clear();
+        Bitmap flashBitmap = BitmapFactory.decodeByteArray(flashImage, 0, flashImage.length);
+        Bitmap backgroundBitmap = BitmapFactory.decodeByteArray(backgroundImage, 0, backgroundImage.length);
+
+        System.out.println("->"+flashBitmap);
+        System.out.println("->"+backgroundBitmap);
+
+        float prediction;
+        try{
+            prediction = spoofingDetection.predict(flashBitmap, backgroundBitmap);
+        } catch (CvException cvException){
+            cvException.printStackTrace();
+            return;
+        }
+
+        if (visualizer != null) {
+            if (prediction == -1.0) {
+                visualizer.visualizeStatus(LivenessDetectionStatus.REAL);
+            } else if (prediction == 1.0) {
+                visualizer.visualizeStatus(LivenessDetectionStatus.FAKE);
+            } else {
+                visualizer.visualizeStatus(LivenessDetectionStatus.UNKNOWN);
+            }
+        }
+
+        MainActivity mainActivity = (MainActivity) getContext();
+        mainActivity.setFlashStatus("OFF");
+        performDetection = false;
+
+        image_list.clear();
 
 //        result.forEach(res -> {
 //            // TODO Check rect param
 //            final FaceGraphic faceGraphic = new FaceGraphic(graphicOverlay, res);
 //            graphicOverlay.add(faceGraphic);
 //        });
-
     }
 
     private static byte[] YUV_420_888toNV21(Image image) {
