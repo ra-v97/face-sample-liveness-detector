@@ -77,39 +77,36 @@ public class FaceEyesDetection {
         }
     }
 
-    public Map<String, Rect> detect_eyes(Mat img){
-            MatOfRect faceDetections = new MatOfRect();
-            assert mJavaDetector != null;
-            Map<String, Rect> res = new HashMap<String, Rect>();
-            mJavaDetector.detectMultiScale(img, faceDetections);
-            for(Rect rect:faceDetections.toArray()) {
-                Rect eyearea_right = new Rect(rect.x +rect.width/16,(int)(rect.y + (rect.height/4.5)),(rect.width - 2*rect.width/16)/2,(int)( rect.height/3.0));
-                Rect eyearea_left = new Rect(rect.x +rect.width/16 +(rect.width - 2*rect.width/16)/2,(int)(rect.y + (rect.height/4.5)),(rect.width - 2*rect.width/16)/2,(int)( rect.height/3.0));
-                int size = 320;
-                res.put("LEFT", get_template(img, eyearea_left, size));
-                res.put("RIGHT", get_template(img, eyearea_right, size));
+    public Map<String, Mat> detect_eyes(Mat img){
+        MatOfRect faceDetections = new MatOfRect();
+        assert mJavaDetector != null;
+        Map<String, Mat> res = new HashMap<String, Mat>();
+        mJavaDetector_eye.detectMultiScale(img, faceDetections, 1.3,5);
+        Mat left_eye = null; Mat right_eye = null;
+        int width = img.width();
+        int height = img.height();
+        System.out.println("WIDHT "+width+ "HEIGHT "+height);
+        for(Rect rect:faceDetections.toArray()) {
+            int x = rect.x;
+            int y = rect.y;
+            int w = rect.width;
+            int h = rect.height;
+            System.out.println(x+" "+y+" "+w+" "+h);
+            if(y>height/2){
+                continue;
             }
-        return res;
-    }
-
-    private Rect get_template(Mat img, Rect area, int size){
-        Mat mROI = img.submat(area);
-        MatOfRect eyes = new MatOfRect();
-        mJavaDetector_eye.detectMultiScale(mROI, eyes, 1.15, 2, Objdetect.CASCADE_FIND_BIGGEST_OBJECT|Objdetect.CASCADE_SCALE_IMAGE, new Size(30,30),new Size());
-        Rect[] eyesArray = eyes.toArray();
-        for (int i = 0; i < eyesArray.length; i++){
-            Point iris = new Point();
-            Rect e = eyesArray[i];
-            e.x = area.x + e.x;
-            e.y = area.y + e.y;
-            Rect eye_only_rectangle = new Rect((int)e.tl().x,(int)( e.tl().y + e.height*0.4),(int)e.width,(int)(e.height*0.6));
-            mROI = img.submat(eye_only_rectangle);
-            Core.MinMaxLocResult mmG = Core.minMaxLoc(mROI);
-            iris.x = mmG.minLoc.x + eye_only_rectangle.x;
-            iris.y = mmG.minLoc.y + eye_only_rectangle.y;
-            return new Rect((int)iris.x-size/2,(int)iris.y-size/2 ,size, size);
+            int eyecenter = x+w/2;
+            if(eyecenter < width*0.5){
+                System.out.println("LEFT EYE"+new Rect((int) (x + (0.33 * w / 2)), (int) (y + (0.33 * h / 2)), (int) (w - (0.33 * w / 2)), (int) (h - (0.33 * h / 2))));
+                left_eye = img.submat(new Rect((int) (x + (0.33 * w / 2)), (int) (y + (0.33 * h / 2)), (int) (w - (0.33 * w / 2)), (int) (h - (0.33 * h / 2))));
+            } else {
+                System.out.println("RIGHT EYE"+new Rect((int) (x + (0.33 * w / 2)), (int) (y + (0.33 * h / 2)), (int) (w - (0.33 * w / 2)), (int) (h - (0.33 * h / 2))));
+                right_eye = img.submat(new Rect((int) (x + (0.33 * w / 2)), (int) (y + (0.33 * h / 2)), (int) (w - (0.33 * w / 2)), (int) (h - (0.33 * h / 2))));
+            }
+            res.put("LEFT", left_eye);
+            res.put("RIGHT", right_eye);
         }
-        return null;
+        return res;
     }
 
     public Mat cut_face(Mat img){

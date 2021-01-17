@@ -36,7 +36,8 @@ public class SpoofingDetection {
 
         if (!svmClassifier.isSVMLoaded()) {
             try {
-                svmClassifier.load(context, "trained_svm2.xml");
+                svmClassifier.load(context, "trained_svm_all3.xml");
+                System.out.println("LOADED");
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -70,20 +71,33 @@ public class SpoofingDetection {
         background = imagePreparation.applyGrayFilter(background);
 
         Mat faceFlash = faceEyesDetection.cut_face(flash);
-        Map flashEyes = faceEyesDetection.detect_eyes(flash);
+
+        if(faceFlash == null){
+            return null;
+        }
+
+        Map flashEyes = faceEyesDetection.detect_eyes(faceFlash);
         if (flashEyes.get("LEFT") == null || flashEyes.get("RIGHT") == null) {
             return null;
         }
-        Mat leftEyeFlash = flash.submat((Rect) flashEyes.get("LEFT"));
-        Mat rightEyeFlash = flash.submat((Rect) flashEyes.get("RIGHT"));
+        Mat leftEyeFlash = (Mat) flashEyes.get("LEFT");
+        Mat rightEyeFlash = (Mat) flashEyes.get("RIGHT");
+
 
         Mat faceBackground = faceEyesDetection.cut_face(background);
-        Map backgroundEyes = faceEyesDetection.detect_eyes(background);
+
+        if(faceBackground == null){
+            return null;
+        }
+
+        Map backgroundEyes = faceEyesDetection.detect_eyes(faceBackground);
+
         if (backgroundEyes.get("LEFT") == null || backgroundEyes.get("RIGHT") == null) {
             return null;
         }
-        Mat leftEyeBackground = background.submat((Rect) backgroundEyes.get("LEFT"));
-        Mat rightEyeBackground = background.submat((Rect) backgroundEyes.get("RIGHT"));
+
+        Mat leftEyeBackground = (Mat) backgroundEyes.get("LEFT");
+        Mat rightEyeBackground = (Mat) backgroundEyes.get("RIGHT");
 
         Descriptors descriptors = new Descriptors();
 
