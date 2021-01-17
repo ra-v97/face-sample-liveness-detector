@@ -71,7 +71,14 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<Image> {
     public void livenessDetectionTrigger(DetectionVisualizer visualizer) {
         Log.i(TAG, "Method triggered");
         this.visualizer = visualizer;
-        performDetection = true;
+        //performDetection = true;
+
+        if (takeBackgroundPhoto) {
+            takeFlashPhoto = true;
+            takeBackgroundPhoto = false;
+        } else {
+            takeBackgroundPhoto = true;
+        }
 
 //        Bitmap bitmapFlash = BitmapFactory.decodeResource(getContext().getResources(), R.drawable.f1);
 //        Bitmap bitmapBackground = BitmapFactory.decodeResource(getContext().getResources(), R.drawable.b1);
@@ -104,14 +111,15 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<Image> {
         return Tasks.call(new Callable<Image>() {
             @Override
             public Image call() throws Exception {
-                if (performDetection) {
+                if (takeBackgroundPhoto) {
+
                     MainActivity mainActivity = (MainActivity) getContext();
                     mainActivity.setFlashStatus("ON");
-                    try {
-                        Thread.sleep(200);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+//                    try {
+//                        Thread.sleep(200);
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                    }
                 }
                 return img;
             }
@@ -129,15 +137,24 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<Image> {
 
     @Override
     protected void onSuccess(Image img) {
-        if(image_list.size() < 10){
-            image_list.add(NV21toJPEG(
-                    YUV_420_888toNV21(img),
-                    img.getWidth(), img.getHeight()));
+        if (takeBackgroundPhoto) {
+            if (image_list.size() < 10) {
+                image_list.add(NV21toJPEG(
+                        YUV_420_888toNV21(img),
+                        img.getWidth(), img.getHeight()));
+            }
         }
 
-        if (!performDetection) {
+        if (!takeFlashPhoto) {
             return;
         }
+
+        takeBackgroundPhoto = false;
+        takeFlashPhoto = false;
+
+//        if (!performDetection) {
+//            return;
+//        }
         byte[] flashImage = NV21toJPEG(
                 YUV_420_888toNV21(img),
                 img.getWidth(), img.getHeight());
@@ -172,7 +189,7 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<Image> {
 
         MainActivity mainActivity = (MainActivity) getContext();
         mainActivity.setFlashStatus("OFF");
-        performDetection = false;
+        //performDetection = false;
 
         image_list.clear();
 

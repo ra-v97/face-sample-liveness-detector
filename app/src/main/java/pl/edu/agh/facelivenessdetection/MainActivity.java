@@ -11,6 +11,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -22,6 +23,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -69,6 +71,8 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
     private ImageView flashView;
 
     private GraphicOverlay graphicOverlay;
+
+    private Button button;
 
     private final StatusChangeHandler statusChangeHandler;
 
@@ -121,6 +125,8 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
         if (graphicOverlay == null) {
             Log.d(TAG, "graphicOverlay is null");
         }
+
+        button = findViewById(R.id.button);
 
         if (!PermissionManager.allPermissionsGranted(this)) {
             PermissionManager.getRuntimePermissions(this);
@@ -200,6 +206,8 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
 
         }
         ScreenBrightness(255,getApplicationContext());
+        button.setBackgroundColor(Color.RED);
+        button.setText("Take flash");
 //        WindowManager.LayoutParams attributes = getWindow().getAttributes();
 //        attributes.screenBrightness = BRIGHTNESS_OVERRIDE_FULL;
 //        getWindow().setAttributes(attributes);
@@ -236,6 +244,8 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
 //        WindowManager.LayoutParams attributes = getWindow().getAttributes();
 //        attributes.screenBrightness = BRIGHTNESS_OVERRIDE_NONE;
 //        getWindow().setAttributes(attributes);
+        button.setBackgroundColor(Color.GREEN);
+        button.setText("Take back");
     }
 
     public void setFlashStatus(String status) {
