@@ -20,11 +20,16 @@ public class FlashHandler extends Handler {
         final MainActivity activity = mainActivityReference.get();
 
         String status = msg.getData().getString("STATUS");
-
-        if (status.equals("ON")) {
-            activity.startFrontFlashEmulator();
-        } else if (status.equals("OFF")) {
-            activity.stopFrontFlashEmulator();
+        if (status != null) {
+            if (status.equals("ON")) {
+                activity.startFrontFlashEmulator();
+            } else if (status.equals("OFF")) {
+                activity.stopFrontFlashEmulator();
+            }
+        } else {
+            String text = msg.getData().getString("BUTTON_TEXT");
+            int color = Integer.parseInt(msg.getData().getString("BUTTON_COLOR"));
+            activity.setButton(text, color);
         }
     }
 }

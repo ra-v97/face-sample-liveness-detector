@@ -206,11 +206,25 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
 
         }
         ScreenBrightness(255,getApplicationContext());
-        button.setBackgroundColor(Color.RED);
-        button.setText("Take flash");
+        setButton("Take flash", Color.RED);
 //        WindowManager.LayoutParams attributes = getWindow().getAttributes();
 //        attributes.screenBrightness = BRIGHTNESS_OVERRIDE_FULL;
 //        getWindow().setAttributes(attributes);
+    }
+
+    public void setButton(String text, int color) {
+        button.setBackgroundColor(color);
+        button.setText(text);
+    }
+
+    public void changeButton(String text, int color) {
+        System.out.println("CHANGE BUTTON");
+        final Message msg = flashHandler.obtainMessage();
+        final Bundle b = new Bundle();
+        b.putString("BUTTON_TEXT", text);
+        b.putString("BUTTON_COLOR", String.valueOf(color));
+        msg.setData(b);
+        flashHandler.sendMessage(msg);
     }
 
     private boolean ScreenBrightness(int level, Context context) {
@@ -244,8 +258,7 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
 //        WindowManager.LayoutParams attributes = getWindow().getAttributes();
 //        attributes.screenBrightness = BRIGHTNESS_OVERRIDE_NONE;
 //        getWindow().setAttributes(attributes);
-        button.setBackgroundColor(Color.GREEN);
-        button.setText("Take back");
+        setButton("Take back", Color.GREEN);
     }
 
     public void setFlashStatus(String status) {

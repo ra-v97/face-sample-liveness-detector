@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.ImageFormat;
 import android.graphics.Rect;
 import android.graphics.YuvImage;
@@ -42,6 +43,8 @@ import pl.edu.agh.facelivenessdetection.utils.BitmapUtils;
 import pl.edu.agh.facelivenessdetection.visualisation.DetectionVisualizer;
 import pl.edu.agh.facelivenessdetection.visualisation.GraphicOverlay;
 
+import static android.graphics.Color.parseColor;
+
 public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<Image> {
 
     private static final String TAG = "FaceDetectorProcessor";
@@ -57,6 +60,8 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<Image> {
     private boolean takeFlashPhoto;
     private List<byte[]> image_list;
 
+    MainActivity mainActivity;
+
     public FaceFlashingLivenessDetector(Context context, GraphicOverlay overlay, boolean isHorizontalMode,
                                         FaceDetectorOptions options) {
         super(context, overlay, isHorizontalMode);
@@ -64,6 +69,8 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<Image> {
         detector = FaceDetection.getClient(options);
         spoofingDetection = new SpoofingDetection(context);
         image_list = new LinkedList<byte[]>();
+        mainActivity = (MainActivity) getContext();
+        mainActivity.changeButton("take back", Color.GREEN);
 
     }
 
@@ -98,6 +105,7 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<Image> {
 
     @Override
     public void stop() {
+        mainActivity.changeButton("DETECT", parseColor("#FF673AB7"));
         super.stop();
         try {
             detector.close();
