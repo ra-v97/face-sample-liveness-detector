@@ -82,13 +82,11 @@ public class FaceEyesDetection {
         Mat right_eye = null;
         int width = img.width();
         int height = img.height();
-        System.out.println("WIDHT " + width + "HEIGHT " + height);
         for (Rect rect : faceDetections.toArray()) {
             int x = rect.x;
             int y = rect.y;
             int w = rect.width;
             int h = rect.height;
-            System.out.println(x + " " + y + " " + w + " " + h);
             if (y > height / 2) {
                 continue;
             }

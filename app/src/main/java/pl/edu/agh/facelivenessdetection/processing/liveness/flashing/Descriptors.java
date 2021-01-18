@@ -36,8 +36,6 @@ public class Descriptors {
         Mat result = new Mat();
         divide(subtracted, added, result);
 
-//        System.out.println(res.dump());
-
         return result;
     }
 

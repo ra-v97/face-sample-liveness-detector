@@ -61,7 +61,7 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<Image> {
 
     @Override
     public void livenessDetectionTrigger(DetectionVisualizer visualizer) {
-        Log.i(TAG, "Method triggered");
+        Log.i(TAG, "Method faceflashing triggered");
         this.visualizer = visualizer;
 
         if (takeBackgroundPhoto) {
@@ -117,7 +117,6 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<Image> {
                 YUV_420_888toNV21(img),
                 img.getWidth(), img.getHeight());
         byte[] backgroundImage = image_list.get(0);
-        System.out.println("Flash photo taken");
         final GraphicOverlay graphicOverlay = getGraphicOverlay();
         graphicOverlay.clear();
 
@@ -178,4 +177,5 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<Image> {
     protected void onFailure(Exception e) {
         Log.w(TAG, "Face Detector failed: " + e);
     }
+
 }

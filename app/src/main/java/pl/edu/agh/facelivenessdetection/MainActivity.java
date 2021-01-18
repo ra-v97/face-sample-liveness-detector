@@ -159,12 +159,12 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
     }
 
     public void startFrontFlashEmulator() {
-//        if(!Settings.System.canWrite(getApplicationContext())){
-//            Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS);
-//            intent.setData(Uri.parse("package:" + getPackageName()));
-//            startActivity(intent);
-//        }
-//        ScreenBrightness(255,getApplicationContext());
+        if(!Settings.System.canWrite(getApplicationContext())){
+            Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS);
+            intent.setData(Uri.parse("package:" + getPackageName()));
+            startActivity(intent);
+        }
+        ScreenBrightness(255,getApplicationContext());
         setButton("Take flash", Color.RED);
     }
 
@@ -174,7 +174,6 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
     }
 
     public void changeButton(String text, int color) {
-        System.out.println("CHANGE BUTTON");
         final Message msg = flashHandler.obtainMessage();
         final Bundle b = new Bundle();
         b.putString("BUTTON_TEXT", text);
@@ -206,7 +205,7 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
     }
 
     public void stopFrontFlashEmulator() {
-//        ScreenBrightness(0,getApplicationContext());
+        ScreenBrightness(0,getApplicationContext());
         setButton("Take back", Color.GREEN);
     }
 
@@ -310,6 +309,7 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
     public void onResume() {
         super.onResume();
         clearInfo();
+        setActiveFaceDetectionMethod(loadActiveMethodFromPreferences());
         setDetectionStatus(LivenessDetectionStatus.UNKNOWN);
         if (cameraManager != null) {
             cameraManager.startCamera();

@@ -3,10 +3,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="pl.edu.agh.facelivenessdetection">
 
-<!--    Required for brightness manipulation (does not work for emulator)-->
     <uses-permission android:name="android.permission.CAMERA"/>
-<!--    <uses-permission android:name="android.permission.WRITE_SETTINGS"-->
-<!--        tools:ignore="ProtectedPermissions" />-->
+
+    <!--    Required for brightness manipulation (does not work for emulator)-->
+    <uses-permission android:name="android.permission.WRITE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
 
 
     <application
