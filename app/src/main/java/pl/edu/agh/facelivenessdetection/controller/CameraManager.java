@@ -109,31 +109,25 @@ public class CameraManager {
             return Optional.empty();
         }
         try {
-            Log.i(TAG, "Using FaceFlashingLivenessDetector");
-            activeLivenessAnalyzer = new FaceFlashingLivenessDetector(context,
-                    graphicOverlay,
-                    isHorizontalMode(),
-                    PreferenceUtils.getFaceDetectorOptionsForLivePreview(context));
-            return Optional.of(activeLivenessAnalyzer);
-//            switch (activeAnalyzerType) {
-//                case FACE_ACTIVITY_METHOD:
-//                    Log.i(TAG, "Using FaceActivityLivenessDetector");
-//                    activeLivenessAnalyzer = new FaceActivityLivenessDetector(context,
-//                            graphicOverlay,
-//                            isHorizontalMode(),
-//                            PreferenceUtils.getFaceDetectorOptionsForLivePreview(context));
-//                    return Optional.of(activeLivenessAnalyzer);
-//
-//                case FACE_FLASHING_METHOD:
-//                    Log.i(TAG, "Using FaceFlashingLivenessDetector");
-//                    activeLivenessAnalyzer = new FaceFlashingLivenessDetector(context,
-//                            graphicOverlay,
-//                            isHorizontalMode(),
-//                            PreferenceUtils.getFaceDetectorOptionsForLivePreview(context));
-//                    return Optional.of(activeLivenessAnalyzer);
-//                default:
-//                    throw new IllegalStateException("Invalid model name");
-//            }
+            switch (activeAnalyzerType) {
+                case FACE_ACTIVITY_METHOD:
+                    Log.i(TAG, "Using FaceActivityLivenessDetector");
+                    activeLivenessAnalyzer = new FaceActivityLivenessDetector(context,
+                            graphicOverlay,
+                            isHorizontalMode(),
+                            PreferenceUtils.getFaceDetectorOptionsForLivePreview(context));
+                    return Optional.of(activeLivenessAnalyzer);
+
+                case FACE_FLASHING_METHOD:
+                    Log.i(TAG, "Using FaceFlashingLivenessDetector");
+                    activeLivenessAnalyzer = new FaceFlashingLivenessDetector(context,
+                            graphicOverlay,
+                            isHorizontalMode(),
+                            PreferenceUtils.getFaceDetectorOptionsForLivePreview(context));
+                    return Optional.of(activeLivenessAnalyzer);
+                default:
+                    throw new IllegalStateException("Invalid model name");
+            }
         } catch (Exception e) {
             Log.e(TAG, "Can not create image processor: " + activeAnalyzerType, e);
             return Optional.empty();

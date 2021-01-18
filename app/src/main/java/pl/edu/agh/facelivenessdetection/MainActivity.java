@@ -21,7 +21,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -50,9 +49,6 @@ import pl.edu.agh.facelivenessdetection.visualisation.GraphicOverlay;
 import pl.edu.agh.facelivenessdetection.handler.StatusChangeHandler;
 import pl.edu.agh.facelivenessdetection.model.LivenessDetectionStatus;
 import pl.edu.agh.facelivenessdetection.visualisation.DetectionVisualizer;
-
-import static android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL;
-import static android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE;
 
 @KeepName
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
@@ -141,8 +137,6 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
         } else {
             Log.d("OpenCV", "OpenCV loaded");
         }
-
-//        startFlashActivity();
     }
 
     @Override
@@ -164,52 +158,17 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
         }
     }
 
-//    public void startFlashActivity() {
-//        final Intent flashStartIntent = new Intent(MainActivity.this, FlashActivity.class);
-//        MainActivity.this.startActivity(flashStartIntent);
-//    }
-
     public void startFrontFlashEmulator() {
-        System.out.println("Emulate front flash");
         flashView.setVisibility(View.VISIBLE);
-        System.out.println("VISIBILITY: " + flashView.getVisibility());
         flashView.bringToFront();
 
-        if(Settings.System.canWrite(getApplicationContext())){
-            System.out.println("CAN WRITE ->");
-        } else{
-            System.out.println("CANNOT WRITE");
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS);
-                intent.setData(Uri.parse("package:" + getPackageName()));
-                startActivity(intent);
-            }
-
-//            Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_WRITE_SETTINGS);
-//            intent.setData(Uri.parse("package:" + this.getPackageName()));
-//            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-//            startActivity(intent);
-
-//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-//                boolean retVal = true;
-//                retVal = Settings.System.canWrite(this);
-//                if (retVal == false) {
-//                    if (!Settings.System.canWrite(getApplicationContext())) {
-//                        Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:" + getPackageName()));
-//                        Toast.makeText(getApplicationContext(), "Please, allow system settings for automatic logout ", Toast.LENGTH_LONG).show();
-//                        startActivity(intent);
-//                    }
-//                }else {
-//                    Toast.makeText(getApplicationContext(), "You are not allowed to wright ", Toast.LENGTH_LONG).show();
-//                }
-//            }
-
+        if(!Settings.System.canWrite(getApplicationContext())){
+            Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS);
+            intent.setData(Uri.parse("package:" + getPackageName()));
+            startActivity(intent);
         }
         ScreenBrightness(255,getApplicationContext());
         setButton("Take flash", Color.RED);
-//        WindowManager.LayoutParams attributes = getWindow().getAttributes();
-//        attributes.screenBrightness = BRIGHTNESS_OVERRIDE_FULL;
-//        getWindow().setAttributes(attributes);
     }
 
     public void setButton(String text, int color) {
@@ -250,19 +209,11 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
     }
 
     public void stopFrontFlashEmulator() {
-//        System.out.println("Stop emulate front flash");
-//        flashView.setVisibility(View.INVISIBLE);
-//        System.out.println("VISIBILITY: " + flashView.getVisibility());
         ScreenBrightness(0,getApplicationContext());
-
-//        WindowManager.LayoutParams attributes = getWindow().getAttributes();
-//        attributes.screenBrightness = BRIGHTNESS_OVERRIDE_NONE;
-//        getWindow().setAttributes(attributes);
         setButton("Take back", Color.GREEN);
     }
 
     public void setFlashStatus(String status) {
-        System.out.println("->"+status);
         final Message msg = flashHandler.obtainMessage();
         final Bundle b = new Bundle();
         b.putString("STATUS", status);

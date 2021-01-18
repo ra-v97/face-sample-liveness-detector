@@ -2,16 +2,11 @@ package pl.edu.agh.facelivenessdetection.processing.liveness.flashing;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.widget.ImageView;
 
 import org.opencv.core.Mat;
-import org.opencv.core.Rect;
 
 import java.io.IOException;
 import java.util.Map;
-
-import pl.edu.agh.facelivenessdetection.R;
 
 public class SpoofingDetection {
 
@@ -21,7 +16,7 @@ public class SpoofingDetection {
     FaceEyesDetection faceEyesDetection;
 
 
-    public SpoofingDetection(Context context){
+    public SpoofingDetection(Context context) {
         this.context = context;
         imagePreparation = new ImagePreparation();
         svmClassifier = new SVMClassifier();
@@ -36,8 +31,7 @@ public class SpoofingDetection {
 
         if (!svmClassifier.isSVMLoaded()) {
             try {
-                svmClassifier.load(context, "trained_svm_all3.xml");
-                System.out.println("LOADED");
+                svmClassifier.load(context, "trained_svm_all4.xml");
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -46,21 +40,11 @@ public class SpoofingDetection {
         Mat flash = imagePreparation.bitmapToMat(bitmapFlash);
         Mat background = imagePreparation.bitmapToMat(bitmapBackground);
 
-//        int resizeFactor = 4;
-//        flash = imagePreparation.resize(flash, flash.width()/resizeFactor, flash.height()/resizeFactor);
-//        background = imagePreparation.resize(background, background.width()/resizeFactor, background.height()/resizeFactor);
-
-
         Mat descriptor = getFaceDescriptor(flash, background);
-        System.out.println("DESCRIPTOR:");
-        System.out.println(descriptor);
         if (descriptor == null) {
             return (float) 0.0;
         }
-        float res = svmClassifier.predict(descriptor);
-
-//        System.out.println(res);
-        return res;
+        return svmClassifier.predict(descriptor);
     }
 
     Mat getFaceDescriptor(Mat flash, Mat background) {
@@ -72,7 +56,7 @@ public class SpoofingDetection {
 
         Mat faceFlash = faceEyesDetection.cut_face(flash);
 
-        if(faceFlash == null){
+        if (faceFlash == null) {
             return null;
         }
 
@@ -86,7 +70,7 @@ public class SpoofingDetection {
 
         Mat faceBackground = faceEyesDetection.cut_face(background);
 
-        if(faceBackground == null){
+        if (faceBackground == null) {
             return null;
         }
 
@@ -122,7 +106,7 @@ public class SpoofingDetection {
         faceBackground = imagePreparation.resize(faceBackground, 100, 100);
 
         Mat specDiffDesc = descriptors.applySpecDiffDesc(leftEyeFlash, rightEyeFlash, leftEyeBackground, rightEyeBackground,
-                                                        faceFlash, faceBackground);
+                faceFlash, faceBackground);
 
         return specDiffDesc;
     }

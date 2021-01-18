@@ -3,14 +3,10 @@ package pl.edu.agh.facelivenessdetection.processing.liveness.flashing;
 import android.content.Context;
 import android.util.Log;
 
-import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfRect;
-import org.opencv.core.Point;
 import org.opencv.core.Rect;
-import org.opencv.core.Size;
 import org.opencv.objdetect.CascadeClassifier;
-import org.opencv.objdetect.Objdetect;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -28,7 +24,7 @@ public class FaceEyesDetection {
     CascadeClassifier mJavaDetector;
     CascadeClassifier mJavaDetector_eye;
 
-    public FaceEyesDetection(Context context){
+    public FaceEyesDetection(Context context) {
         configure(context);
     }
 
@@ -77,31 +73,30 @@ public class FaceEyesDetection {
         }
     }
 
-    public Map<String, Mat> detect_eyes(Mat img){
+    public Map<String, Mat> detect_eyes(Mat img) {
         MatOfRect faceDetections = new MatOfRect();
         assert mJavaDetector != null;
         Map<String, Mat> res = new HashMap<String, Mat>();
-        mJavaDetector_eye.detectMultiScale(img, faceDetections, 1.3,5);
-        Mat left_eye = null; Mat right_eye = null;
+        mJavaDetector_eye.detectMultiScale(img, faceDetections, 1.3, 5);
+        Mat left_eye = null;
+        Mat right_eye = null;
         int width = img.width();
         int height = img.height();
-        System.out.println("WIDHT "+width+ "HEIGHT "+height);
-        for(Rect rect:faceDetections.toArray()) {
+        System.out.println("WIDHT " + width + "HEIGHT " + height);
+        for (Rect rect : faceDetections.toArray()) {
             int x = rect.x;
             int y = rect.y;
             int w = rect.width;
             int h = rect.height;
-            System.out.println(x+" "+y+" "+w+" "+h);
-            if(y>height/2){
+            System.out.println(x + " " + y + " " + w + " " + h);
+            if (y > height / 2) {
                 continue;
             }
-            int eyecenter = x+w/2;
-            if(eyecenter < width*0.5){
-                System.out.println("LEFT EYE"+new Rect((int) (x + (0.33 * w / 2)), (int) (y + (0.33 * h / 2)), (int) (w - (0.33 * w / 2)), (int) (h - (0.33 * h / 2))));
-                left_eye = img.submat(new Rect((int) (x + (0.33 * w / 2)), (int) (y + (0.33 * h / 2)), (int) (w - (0.33 * w / 2)), (int) (h - (0.33 * h / 2))));
+            int eyecenter = x + w / 2;
+            if (eyecenter < width * 0.5) {
+                left_eye = img.submat(new Rect((int) (x + (0.66 * w / 2)), (int) (y + (0.66 * h / 2)), (int) (w - (0.66 * w / 2)), (int) (h - (0.66 * h / 2))));
             } else {
-                System.out.println("RIGHT EYE"+new Rect((int) (x + (0.33 * w / 2)), (int) (y + (0.33 * h / 2)), (int) (w - (0.33 * w / 2)), (int) (h - (0.33 * h / 2))));
-                right_eye = img.submat(new Rect((int) (x + (0.33 * w / 2)), (int) (y + (0.33 * h / 2)), (int) (w - (0.33 * w / 2)), (int) (h - (0.33 * h / 2))));
+                right_eye = img.submat(new Rect((int) (x + (0.66 * w / 2)), (int) (y + (0.66 * h / 2)), (int) (w - (0.66 * w / 2)), (int) (h - (0.66 * h / 2))));
             }
             res.put("LEFT", left_eye);
             res.put("RIGHT", right_eye);
@@ -109,12 +104,12 @@ public class FaceEyesDetection {
         return res;
     }
 
-    public Mat cut_face(Mat img){
+    public Mat cut_face(Mat img) {
         assert mJavaDetector != null;
         MatOfRect faceDetections = new MatOfRect();
         mJavaDetector.detectMultiScale(img, faceDetections);
         Mat roi = null;
-        for(Rect rect:faceDetections.toArray()) {
+        for (Rect rect : faceDetections.toArray()) {
             roi = new Mat(img, rect);
         }
         return roi;
