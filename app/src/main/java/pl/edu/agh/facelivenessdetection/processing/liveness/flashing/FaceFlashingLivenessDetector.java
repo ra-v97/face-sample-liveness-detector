@@ -41,8 +41,6 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<Image> {
     private final FaceDetector detector;
     DetectionVisualizer visualizer;
     private SpoofingDetection spoofingDetection;
-    //    private boolean flashActive = false;
-//    private List<byte[]> image_list;
     private boolean takeBackgroundPhoto;
     private boolean takeFlashPhoto;
     private List<byte[]> image_list;
@@ -91,9 +89,7 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<Image> {
             @Override
             public Image call() throws Exception {
                 if (takeBackgroundPhoto) {
-                    ;
-//                    MainActivity mainActivity = (MainActivity) getContext();
-//                    mainActivity.setFlashStatus("OFF");
+                    mainActivity.setFlashStatus("ON");
                 }
                 return img;
             }
@@ -146,8 +142,7 @@ public class FaceFlashingLivenessDetector extends BaseImageAnalyzer<Image> {
             }
         }
 
-//        MainActivity mainActivity = (MainActivity) getContext();
-//        mainActivity.setFlashStatus("OFF");
+        mainActivity.setFlashStatus("OFF");
 
         image_list.clear();
     }

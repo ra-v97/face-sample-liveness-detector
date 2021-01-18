@@ -159,15 +159,12 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
     }
 
     public void startFrontFlashEmulator() {
-        flashView.setVisibility(View.VISIBLE);
-        flashView.bringToFront();
-
-        if(!Settings.System.canWrite(getApplicationContext())){
-            Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS);
-            intent.setData(Uri.parse("package:" + getPackageName()));
-            startActivity(intent);
-        }
-        ScreenBrightness(255,getApplicationContext());
+//        if(!Settings.System.canWrite(getApplicationContext())){
+//            Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS);
+//            intent.setData(Uri.parse("package:" + getPackageName()));
+//            startActivity(intent);
+//        }
+//        ScreenBrightness(255,getApplicationContext());
         setButton("Take flash", Color.RED);
     }
 
@@ -209,7 +206,7 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
     }
 
     public void stopFrontFlashEmulator() {
-        ScreenBrightness(0,getApplicationContext());
+//        ScreenBrightness(0,getApplicationContext());
         setButton("Take back", Color.GREEN);
     }
 
