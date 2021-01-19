@@ -31,7 +31,7 @@ public class SpoofingDetection {
 
         if (!svmClassifier.isSVMLoaded()) {
             try {
-                svmClassifier.load(context, "trained_svm_all4.xml");
+                svmClassifier.load(context, "trained_svm_all.xml");
             } catch (IOException e) {
                 e.printStackTrace();
             }

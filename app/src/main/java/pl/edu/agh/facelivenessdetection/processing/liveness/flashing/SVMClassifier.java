@@ -35,7 +35,7 @@ public class SVMClassifier {
     }
 
     public void load(Context context, String file) throws IOException {
-        InputStream is = context.getResources().openRawResource(R.raw.trained_svm_all4);
+        InputStream is = context.getResources().openRawResource(R.raw.trained_svm_all);
         File cascadeDir = context.getDir("cascade", Context.MODE_PRIVATE);
         File mCascadeFile = new File(cascadeDir, file);
         FileOutputStream os = new FileOutputStream(mCascadeFile);
