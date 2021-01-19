@@ -39,6 +39,10 @@ configurations.all {
     }
 }
 
+repositories {
+    jcenter()
+}
+
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'com.google.android.material:material:1.2.1'
@@ -61,6 +65,7 @@ dependencies {
     implementation "androidx.camera:camera-lifecycle:1.0.0-SNAPSHOT"
     implementation "androidx.camera:camera-view:1.0.0-SNAPSHOT"
     implementation 'androidx.preference:preference:1.1.1'
+    implementation 'com.quickbirdstudios:opencv:4.3.0'
 
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'

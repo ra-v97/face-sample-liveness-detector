@@ -21,6 +21,13 @@
             android:layout_height="match_parent"
             app:scaleType="fillCenter">
 
+            <ImageView
+                android:id="@+id/flashView"
+                android:layout_width="415dp"
+                android:layout_height="651dp"
+                android:contentDescription="@string/flashimage"
+                android:visibility="invisible"
+                app:srcCompat="@android:drawable/screen_background_light" />
         </androidx.camera.view.PreviewView>
 
         <pl.edu.agh.facelivenessdetection.visualisation.GraphicOverlay

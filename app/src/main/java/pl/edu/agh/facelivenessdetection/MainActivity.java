@@ -8,16 +8,22 @@ import androidx.camera.view.PreviewView;
 import androidx.preference.PreferenceManager;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Message;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -25,12 +31,15 @@ import android.widget.Toast;
 import com.google.android.gms.common.annotation.KeepName;
 import com.google.common.collect.Lists;
 
+import org.opencv.android.OpenCVLoader;
+
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import pl.edu.agh.facelivenessdetection.controller.CameraManager;
+import pl.edu.agh.facelivenessdetection.handler.FlashHandler;
 import pl.edu.agh.facelivenessdetection.handler.LoggingHandler;
 import pl.edu.agh.facelivenessdetection.persistence.PersistenceManager;
 import pl.edu.agh.facelivenessdetection.processing.AuthWithFaceLivenessDetectMethodType;
@@ -55,11 +64,17 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
 
     private PreviewView previewView;
 
+    private ImageView flashView;
+
     private GraphicOverlay graphicOverlay;
+
+    private Button button;
 
     private final StatusChangeHandler statusChangeHandler;
 
     private final LoggingHandler loggingHandler;
+
+    private final FlashHandler flashHandler;
 
     private final List<String> logs;
 
@@ -76,6 +91,7 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
     public MainActivity() {
         statusChangeHandler = new StatusChangeHandler(this);
         loggingHandler = new LoggingHandler(this);
+        flashHandler = new FlashHandler(this);
         logs = Lists.newArrayList();
         loggingLock = new ReentrantLock();
     }
@@ -95,10 +111,18 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
         if (previewView == null) {
             Log.d(TAG, "Preview is null");
         }
+
+        flashView = findViewById(R.id.flashView);
+        if(flashView == null){
+            Log.d(TAG, "flashView is null");
+        }
+
         graphicOverlay = findViewById(R.id.graphic_overlay);
         if (graphicOverlay == null) {
             Log.d(TAG, "graphicOverlay is null");
         }
+
+        button = findViewById(R.id.button);
 
         if (!PermissionManager.allPermissionsGranted(this)) {
             PermissionManager.getRuntimePermissions(this);
@@ -107,6 +131,12 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
         createCameraManager();
         createPersistenceManager();
         setUpViewModelProvider();
+
+        if (!OpenCVLoader.initDebug()) {
+            Log.e("OpenCV", "Unable to load OpenCV");
+        } else {
+            Log.d("OpenCV", "OpenCV loaded");
+        }
     }
 
     @Override
@@ -126,6 +156,65 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    public void startFrontFlashEmulator() {
+        if(!Settings.System.canWrite(getApplicationContext())){
+            Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS);
+            intent.setData(Uri.parse("package:" + getPackageName()));
+            startActivity(intent);
+        }
+        ScreenBrightness(255,getApplicationContext());
+        setButton("Take flash", Color.RED);
+    }
+
+    public void setButton(String text, int color) {
+        button.setBackgroundColor(color);
+        button.setText(text);
+    }
+
+    public void changeButton(String text, int color) {
+        final Message msg = flashHandler.obtainMessage();
+        final Bundle b = new Bundle();
+        b.putString("BUTTON_TEXT", text);
+        b.putString("BUTTON_COLOR", String.valueOf(color));
+        msg.setData(b);
+        flashHandler.sendMessage(msg);
+    }
+
+    private boolean ScreenBrightness(int level, Context context) {
+        try {
+            android.provider.Settings.System.putInt(
+                    context.getContentResolver(),
+                    android.provider.Settings.System.SCREEN_BRIGHTNESS, level);
+            android.provider.Settings.System.putInt(context.getContentResolver(),
+                    android.provider.Settings.System.SCREEN_BRIGHTNESS_MODE,
+                    android.provider.Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL);
+            android.provider.Settings.System.putInt(
+                    context.getContentResolver(),
+                    android.provider.Settings.System.SCREEN_BRIGHTNESS,
+                    level);
+            return true;
+        }
+
+        catch (Exception e) {
+            Log.e("Screen Brightness", "error changing screen brightness");
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public void stopFrontFlashEmulator() {
+        ScreenBrightness(0,getApplicationContext());
+        setButton("Take back", Color.GREEN);
+    }
+
+    public void setFlashStatus(String status) {
+        final Message msg = flashHandler.obtainMessage();
+        final Bundle b = new Bundle();
+        b.putString("STATUS", status);
+        msg.setData(b);
+        flashHandler.sendMessage(msg);
     }
 
     private void createCameraManager() {
@@ -220,6 +309,7 @@ public class MainActivity extends AppCompatActivity implements DetectionVisualiz
     public void onResume() {
         super.onResume();
         clearInfo();
+        setActiveFaceDetectionMethod(loadActiveMethodFromPreferences());
         setDetectionStatus(LivenessDetectionStatus.UNKNOWN);
         if (cameraManager != null) {
             cameraManager.startCamera();
